@@ -3,10 +3,77 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:ForgeLauncher.WPF"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance local:MainVMDesignData, IsDesignTimeCreatable=True}"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <!-- TODO: selected item -->
+            <ComboBox Grid.Column="0"
+                        Margin="5,2"
+                        SelectedIndex="0">
+                <ComboBoxItem>snapshot</ComboBoxItem>
+                <ComboBoxItem>release</ComboBoxItem>
+            </ComboBox>
+            <Button Grid.Column="1"
+                    Margin="5,2"
+                    Content="Update"
+                    Command="{Binding UpdateCommand}"/>
+            <!-- TODO: exe to start -->
+            <ComboBox Grid.Column="2"
+                        Margin="5,2"
+                        SelectedIndex="0">
+                <ComboBoxItem>forge.exe</ComboBoxItem>
+                <ComboBoxItem>forge-java8.exe</ComboBoxItem>
+            </ComboBox>
+            <!-- TODO: start Forge -->
+            <Button Grid.Column="3"
+                    Margin="5,2"
+                    Content="Launch"
+                    Command="{Binding LaunchCommand}"/>
+            <!-- TODO: remove -->
+            <Button Grid.Column="4"
+                    Margin="5,2"
+                    Content="TEST"
+                    Command="{Binding TestCommand}"/>
+        </Grid>
+        <!-- Logs -->
+        <ItemsControl Grid.Row="1"
+                      Margin="5,2"
+                      ItemsSource="{Binding Logs}">
+            <ItemsControl.Template>
+                <ControlTemplate>
+                    <ScrollViewer CanContentScroll="True">
+                        <ItemsPresenter/>
+                    </ScrollViewer>
+                </ControlTemplate>
+            </ItemsControl.Template>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel IsItemsHost="True"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+        <!-- Progress -->
+        <ProgressBar Grid.Row="2"
+                     Height="10"
+                     Margin="5,0"
+                     Visibility="{Binding IsInProgress, Converter={StaticResource BooleanToVisibilityConverter}}"
+                     IsIndeterminate="{Binding IsExtracting}"
+                     Value="{Binding DownloadProgress, Mode=OneWay}"/>
     </Grid>
 </Window>
