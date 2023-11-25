@@ -20,14 +20,69 @@ namespace ForgeLauncher.WPF
         {
             Logs = new ObservableCollection<string>
             {
-                "Application started"
+                "Application started."
             };
 
-            CheckLatestVersionAsync(CancellationToken.None);
+            InitializeAsync(CancellationToken.None);
         }
 
-        // current version
-        // TODO
+        private static string ExtractVersionFromJar(string filename)
+            => Path.GetFileNameWithoutExtension(filename).Replace("forge-gui-desktop-", string.Empty).Replace("-SNAPSHOT-jar-with-dependencies", string.Empty);
+
+        // Check current version, check latest version, update if needed then launch
+        private async Task InitializeAsync(CancellationToken cancellationToken)
+        {
+            CheckCurrentVersion();
+            await CheckLatestVersionAsync(cancellationToken)
+                .ContinueWith(_ => UpdateIfNeededAsync(cancellationToken))
+                .ContinueWith(_ => Launch());
+        }
+
+        private async Task UpdateIfNeededAsync(CancellationToken cancellationToken)
+        {
+            if (LatestVersion == null)
+                return;
+            // TODO: ask confirmation
+            if (CurrentVersion == null) // not installed
+            {
+                AddLog("Installing Forge...");
+                await DownloadAsync(cancellationToken)
+                    .ContinueWith(_ => Extract(), cancellationToken)
+                    .ContinueWith(_ => AddLog("Installation complete."));
+            }
+            else if (!LatestVersion.Contains(CurrentVersion)) // updated needed
+            {
+                AddLog("Forge is outdated, updating to lastest version...");
+                await DownloadAsync(cancellationToken)
+                .ContinueWith(_ => Extract(), cancellationToken)
+                .ContinueWith(_ => AddLog("Update complete."));
+            }
+            else
+                AddLog("Forge is up-to-date.");
+        }
+
+        // Current version
+        private string _currentVersion;
+        public string CurrentVersion
+        {
+            get => _currentVersion;
+            protected set => SetProperty(ref _currentVersion, value);
+        }
+
+        private void CheckCurrentVersion()
+        {
+            AddLog("Checking current version...");
+            var forgePath = ConfigurationManager.AppSettings["ForgeInstallationFolder"];
+            var guiDesktopSnapshotJarVersions = Directory.EnumerateFiles(forgePath, "forge-gui-desktop-*-SNAPSHOT-jar-with-dependencies.jar").Select(x => ExtractVersionFromJar(x)).ToList();
+            var currentVersion = guiDesktopSnapshotJarVersions.OrderByDescending(x => x).FirstOrDefault();
+            if (currentVersion == null)
+                AddLog("Forge is not installed.");
+            else
+            {
+                AddLog($"Current version is {currentVersion}");
+                CurrentVersion = currentVersion;
+            }
+        }
 
         //  Latest version
         private string _latestFilename = null!;
@@ -35,6 +90,13 @@ namespace ForgeLauncher.WPF
         {
             get => _latestFilename;
             protected set => SetProperty(ref _latestFilename, value);
+        }
+
+        private string _latestVersion;
+        public string LatestVersion
+        {
+            get => _latestVersion;
+            protected set => SetProperty(ref _latestVersion, value);
         }
 
         private async Task CheckLatestVersionAsync(CancellationToken cancellationToken)
@@ -67,8 +129,8 @@ namespace ForgeLauncher.WPF
                                 AddLog("Error while parsing filename (code 3)");
                             else
                             {
-                                var latestVersion = latestFilename.Replace("forge-gui-desktop-", string.Empty).Replace(".tar.bz2", string.Empty);
-                                AddLog($"Latest version is {latestVersion}");
+                                LatestVersion = latestFilename.Replace("forge-gui-desktop-", string.Empty).Replace(".tar.bz2", string.Empty);
+                                AddLog($"Latest version is {LatestVersion}");
                                 LatestFilename = latestFilename;
                             }
                         }
@@ -191,7 +253,7 @@ namespace ForgeLauncher.WPF
                     WorkingDirectory = forgePath,
                     UseShellExecute = false,
                 };
-                AddLog("Launching forge");
+                AddLog("Launching forge...");
                 var process = Process.Start(processStartInfo);
             }
             catch (Exception ex)
