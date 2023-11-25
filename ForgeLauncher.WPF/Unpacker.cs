@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ForgeLauncher.WPF
 {
-    public class Extract
+    public class Unpacker
     {
         public void ExtractTarBz2(string archiveName, string destinationFolder)
         {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ForgeLauncher.WPF
 {
-    public class Download
+    public class Downloader
     {
         public async Task<string> DownloadHtmlAsync(string url, CancellationToken cancellationToken)
         {

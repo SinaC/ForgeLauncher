@@ -7,7 +7,6 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -32,141 +31,79 @@ namespace ForgeLauncher.WPF
                 InitializeAsync(CancellationToken.None);
         }
 
-        private static string ExtractVersionFromJar(string filename)
-            => Path.GetFileNameWithoutExtension(filename).Replace("forge-gui-desktop-", string.Empty).Replace("-SNAPSHOT-jar-with-dependencies", string.Empty);
+        private string ServerVersionFilename { get; set; } = null!;
 
         // Check current version, check latest version, update if needed then launch
         private async Task InitializeAsync(CancellationToken cancellationToken)
         {
-            CheckCurrentVersion();
-            await CheckLatestVersionAsync(cancellationToken)
-                .ContinueWith(_ => UpdateIfNeededAsync(cancellationToken));
+            try
+            {
+                var versionChecker = new VersionChecker();
+                Log("Checking local version...");
+                var localVersion = versionChecker.CheckLocalVersion();
+                if (localVersion == null)
+                    Log("Forge is not installed");
+                Log("Checking server version...");
+                await versionChecker.CheckServerVersionAsync(cancellationToken)
+                    .ContinueWith(t =>
+                    {
+                        if (t.Result == default)
+                            Log($"Cannot retrieve server version!");
+                        else
+                        {
+                            Log($"Latest version is {t.Result.serverVersion}");
+                            ServerVersionFilename = t.Result.serverVersionFilename;
+                        }
+                        return t.Result;
+                    }, cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                    .ContinueWith(t => UpdateIfNeededAsync(localVersion, t.Result.serverVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+            }
+            catch (Exception ex)
+            {
+                Log("Error while checking version!");
+            }
         }
 
-        private async Task UpdateIfNeededAsync(CancellationToken cancellationToken)
+        private async Task UpdateIfNeededAsync(string localVersion, string serverVersion, CancellationToken cancellationToken)
         {
-            if (LatestVersion == null)
+            if (serverVersion == null)
                 return;
             // TODO: center message box on Wpf window
-            if (CurrentVersion == null) // not installed
+            if (localVersion == null) // not installed
             {
                 var messageBoxResult = MessageBox.Show("Forge is not installed, do you want to install and start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
                 if (messageBoxResult == MessageBoxResult.Yes)
                 {
-                    AddLog("Installing Forge...");
+                    Log("Installing Forge...");
                     await DownloadAsync(cancellationToken)
-                        .ContinueWith(_ => Extract(), cancellationToken)
-                        .ContinueWith(_ => AddLog("Installation complete."), cancellationToken)
-                        .ContinueWith(_ => Launch(), cancellationToken);
+                        .ContinueWith(_ => Unpack(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                        .ContinueWith(_ => Log("Installation complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                        .ContinueWith(_ => Launch(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
                 }
             }
-            else if (!LatestVersion.Contains(CurrentVersion)) // updated needed
+            else if (!serverVersion.Contains(localVersion)) // updated needed
             {
-                AddLog("Forge is outdated.");
+                Log("Forge is outdated.");
                 var messageBoxResult = MessageBox.Show("Forge is outdated, do you want to update and start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
                 if (messageBoxResult == MessageBoxResult.Yes)
                 {
-                    AddLog("Updating to lastest version...");
+                    Log("Updating to lastest version...");
                     await DownloadAsync(cancellationToken)
-                        .ContinueWith(_ => Extract(), cancellationToken)
-                        .ContinueWith(_ => AddLog("Update complete."), cancellationToken)
-                        .ContinueWith(_ => Launch(), cancellationToken);
+                        .ContinueWith(_ => Unpack(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                        .ContinueWith(_ => Log("Update complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                        .ContinueWith(_ => Launch(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
                 }
             }
             else
             {
-                AddLog("Forge is up-to-date.");
+                Log("Forge is up-to-date.");
                 var messageBoxResult = MessageBox.Show("Forge is up-to-date, do you want to start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
                 if (messageBoxResult == MessageBoxResult.Yes)
                     Launch();
             }
         }
 
-        // Current version
-        private string _currentVersion = null!;
-        public string CurrentVersion
-        {
-            get => _currentVersion;
-            protected set => SetProperty(ref _currentVersion, value);
-        }
-
-        private void CheckCurrentVersion()
-        {
-            AddLog("Checking current version...");
-            var forgePath = ConfigurationManager.AppSettings["ForgeInstallationFolder"];
-            var guiDesktopSnapshotJarVersions = Directory.EnumerateFiles(forgePath, "forge-gui-desktop-*-SNAPSHOT-jar-with-dependencies.jar").Select(x => ExtractVersionFromJar(x)).ToList();
-            var currentVersion = guiDesktopSnapshotJarVersions.OrderByDescending(x => x).FirstOrDefault();
-            if (currentVersion == null)
-                AddLog("Forge is not installed.");
-            else
-            {
-                AddLog($"Current version is {currentVersion}");
-                CurrentVersion = currentVersion;
-            }
-        }
-
-        //  Latest version
-        private string _latestFilename = null!;
-        public string LatestFilename
-        {
-            get => _latestFilename;
-            protected set => SetProperty(ref _latestFilename, value);
-        }
-
-        private string _latestVersion = null!;
-        public string LatestVersion
-        {
-            get => _latestVersion;
-            protected set => SetProperty(ref _latestVersion, value);
-        }
-
-        private async Task CheckLatestVersionAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                AddLog("Checking latest version...");
-
-                var dailySnapshotsUrl = ConfigurationManager.AppSettings["DailySnapshotsUrl"];
-
-                var download = new Download();
-                var html = await download.DownloadHtmlAsync(dailySnapshotsUrl, cancellationToken);
-
-                // search for <a href="forge-gui-desktop
-                var guiDesktopAhrefLine = html.Split(Environment.NewLine.ToCharArray()).FirstOrDefault(x => x.TrimStart().StartsWith("<a href=\"forge-gui-desktop"));
-                if (guiDesktopAhrefLine != null)
-                {
-                    var firstDoubleQuoteIndex = guiDesktopAhrefLine.IndexOf("\"");
-                    if (firstDoubleQuoteIndex == -1)
-                        AddLog("Error while parsing filename (code 1)");
-                    else
-                    {
-                        var secondDoubleQuoteIndex = guiDesktopAhrefLine.IndexOf("\"", firstDoubleQuoteIndex + 1);
-                        if (secondDoubleQuoteIndex == -1)
-                            AddLog("Error while parsing filename (code 2)");
-                        else
-                        {
-                            var latestFilename = guiDesktopAhrefLine.Substring(firstDoubleQuoteIndex + 1, secondDoubleQuoteIndex - firstDoubleQuoteIndex - 1);
-                            if (!latestFilename.EndsWith(".tar.bz2"))
-                                AddLog("Error while parsing filename (code 3)");
-                            else
-                            {
-                                LatestVersion = latestFilename.Replace("forge-gui-desktop-", string.Empty).Replace(".tar.bz2", string.Empty);
-                                AddLog($"Latest version is {LatestVersion}");
-                                LatestFilename = latestFilename;
-                            }
-                        }
-                    }
-                }
-                else
-                    AddLog("Error while parsing website");
-            }
-            catch (Exception ex)
-            {
-                AddLog("Error while checking lastest version");
-            }
-        }
-
-        public bool IsInProgress => IsDownloading || IsExtracting;
+        public bool IsInProgress => IsDownloading || IsUnpacking;
 
         // Update
 
@@ -175,8 +112,14 @@ namespace ForgeLauncher.WPF
 
         private async Task UpdateAsync(CancellationToken cancellationToken)
         {
+            if (ServerVersionFilename == null)
+            {
+                Log("Cannot update. Server issue!");
+                MessageBox.Show("Cannot update. Server issue!");
+                return;
+            }
             await DownloadAsync(cancellationToken)
-                .ContinueWith(_ => Extract(), cancellationToken);
+                .ContinueWith(_ => Unpack(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
         }
 
         private bool _isDownloading;
@@ -197,21 +140,21 @@ namespace ForgeLauncher.WPF
         {
             try
             {
-                AddLog("Downloading update...");
+                Log("Downloading update...");
 
                 IsDownloading = true;
                 var dailySnapshotsUrl = ConfigurationManager.AppSettings["DailySnapshotsUrl"];
-                var downloadUrl = dailySnapshotsUrl + LatestFilename;
-                var destinationFilePath = Path.Combine(Path.GetTempPath(), LatestFilename);
+                var downloadUrl = dailySnapshotsUrl + ServerVersionFilename;
+                var destinationFilePath = Path.Combine(Path.GetTempPath(), ServerVersionFilename);
 
-                var download = new Download();
-                await download.DownloadFileAsync(downloadUrl, destinationFilePath, HandleDownloadProgressChanged, cancellationToken);
+                var downloader = new Downloader();
+                await downloader.DownloadFileAsync(downloadUrl, destinationFilePath, HandleDownloadProgressChanged, cancellationToken);
 
-                AddLog("Update downloaded.");
+                Log("Update downloaded.");
             }
             catch (Exception ex)
             {
-                AddLog("Download failed!");
+                Log("Download failed!");
             }
             finally
             {
@@ -219,34 +162,34 @@ namespace ForgeLauncher.WPF
             }
         }
 
-        private bool _isExtracting;
-        public bool IsExtracting
+        private bool _isUnpacking;
+        public bool IsUnpacking
         {
-            get => _isExtracting;
-            protected set => SetProperty(ref _isExtracting, value, nameof(IsExtracting), nameof(IsInProgress));
+            get => _isUnpacking;
+            protected set => SetProperty(ref _isUnpacking, value, nameof(IsUnpacking), nameof(IsInProgress));
         }
 
-        private void Extract()
+        private void Unpack()
         {
             try
             {
-                AddLog("Unpacking update...");
+                Log("Unpacking update...");
 
-                IsExtracting = true;
-                var sourceFilePath = Path.Combine(Path.GetTempPath(), LatestFilename);
+                IsUnpacking = true;
+                var sourceFilePath = Path.Combine(Path.GetTempPath(), ServerVersionFilename);
                 var forgePath = ConfigurationManager.AppSettings["ForgeInstallationFolder"];
-                var extract = new Extract();
-                extract.ExtractTarBz2(sourceFilePath, forgePath);
+                var unpacker = new Unpacker();
+                unpacker.ExtractTarBz2(sourceFilePath, forgePath);
 
-                AddLog("Update unpacked.");
+                Log("Update unpacked.");
             }
             catch (Exception ex)
             {
-                AddLog("Unpack failed!");
+                Log("Unpack failed!");
             }
             finally
             {
-                IsExtracting = false;
+                IsUnpacking = false;
             }
         }
 
@@ -265,10 +208,16 @@ namespace ForgeLauncher.WPF
         {
             try
             {
-                AddLog("Launching forge...");
+                Log("Launching forge...");
                 var forgePath = ConfigurationManager.AppSettings["ForgeInstallationFolder"];
                 // TODO: use exe from combo
                 var exePath = Path.Combine(forgePath, "forge.exe");
+                if (!File.Exists(exePath))
+                {
+                    Log("Forge executable not found!");
+                    MessageBox.Show("Forge executable not found!");
+                    return;
+                }
                 var processStartInfo = new ProcessStartInfo
                 {
                     FileName = exePath,
@@ -279,7 +228,7 @@ namespace ForgeLauncher.WPF
             }
             catch (Exception ex)
             {
-                AddLog("Error while launching forge");
+                Log("Error while launching forge");
             }
         }
 
@@ -289,11 +238,6 @@ namespace ForgeLauncher.WPF
         {
             get => _logs;
             protected set => SetProperty(ref _logs, value);
-        }
-
-        private void AddLog(string logEntry)
-        {
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(() => Logs.Add(logEntry));
         }
 
         //
@@ -321,6 +265,12 @@ namespace ForgeLauncher.WPF
             }
 
             return true;
+        }
+
+        //
+        public void Log(string logEntry)
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(() => Logs.Add(logEntry));
         }
     }
 

@@ -71,7 +71,7 @@
                      Height="10"
                      Margin="5,0"
                      Visibility="{Binding IsInProgress, Converter={StaticResource BooleanToVisibilityConverter}}"
-                     IsIndeterminate="{Binding IsExtracting}"
+                     IsIndeterminate="{Binding IsUnpacking}"
                      Value="{Binding DownloadProgress, Mode=OneWay}"/>
     </Grid>
 </Window>
