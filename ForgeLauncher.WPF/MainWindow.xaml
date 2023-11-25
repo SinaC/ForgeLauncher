@@ -7,7 +7,9 @@
         xmlns:local="clr-namespace:ForgeLauncher.WPF"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance local:MainVMDesignData, IsDesignTimeCreatable=True}"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Forge Launcher"
+        Height="240" Width="480">
+    <!-- TODO icon -->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -29,6 +31,7 @@
                 <ComboBoxItem>snapshot</ComboBoxItem>
                 <ComboBoxItem>release</ComboBoxItem>
             </ComboBox>
+            <!-- Update -->
             <Button Grid.Column="1"
                     Margin="5,2"
                     Content="Update"
@@ -40,16 +43,11 @@
                 <ComboBoxItem>forge.exe</ComboBoxItem>
                 <ComboBoxItem>forge-java8.exe</ComboBoxItem>
             </ComboBox>
-            <!-- TODO: start Forge -->
+            <!-- Start Forge -->
             <Button Grid.Column="3"
                     Margin="5,2"
                     Content="Launch"
                     Command="{Binding LaunchCommand}"/>
-            <!-- TODO: remove -->
-            <Button Grid.Column="4"
-                    Margin="5,2"
-                    Content="TEST"
-                    Command="{Binding TestCommand}"/>
         </Grid>
         <!-- Logs -->
         <ItemsControl Grid.Row="1"
