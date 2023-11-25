@@ -10,20 +10,26 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace ForgeLauncher.WPF
 {
     public class MainVM : ObservableObject
     {
-        public MainVM()
+        protected MainVM()
         {
             Logs = new ObservableCollection<string>
             {
                 "Application started."
             };
+        }
 
-            InitializeAsync(CancellationToken.None);
+        public MainVM(bool initialize)
+            : this()
+        {
+            if (initialize)
+                InitializeAsync(CancellationToken.None);
         }
 
         private static string ExtractVersionFromJar(string filename)
@@ -34,35 +40,50 @@ namespace ForgeLauncher.WPF
         {
             CheckCurrentVersion();
             await CheckLatestVersionAsync(cancellationToken)
-                .ContinueWith(_ => UpdateIfNeededAsync(cancellationToken))
-                .ContinueWith(_ => Launch());
+                .ContinueWith(_ => UpdateIfNeededAsync(cancellationToken));
         }
 
         private async Task UpdateIfNeededAsync(CancellationToken cancellationToken)
         {
             if (LatestVersion == null)
                 return;
-            // TODO: ask confirmation
+            // TODO: center message box on Wpf window
             if (CurrentVersion == null) // not installed
             {
-                AddLog("Installing Forge...");
-                await DownloadAsync(cancellationToken)
-                    .ContinueWith(_ => Extract(), cancellationToken)
-                    .ContinueWith(_ => AddLog("Installation complete."));
+                var messageBoxResult = MessageBox.Show("Forge is not installed, do you want to install and start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
+                if (messageBoxResult == MessageBoxResult.Yes)
+                {
+                    AddLog("Installing Forge...");
+                    await DownloadAsync(cancellationToken)
+                        .ContinueWith(_ => Extract(), cancellationToken)
+                        .ContinueWith(_ => AddLog("Installation complete."), cancellationToken)
+                        .ContinueWith(_ => Launch(), cancellationToken);
+                }
             }
             else if (!LatestVersion.Contains(CurrentVersion)) // updated needed
             {
-                AddLog("Forge is outdated, updating to lastest version...");
-                await DownloadAsync(cancellationToken)
-                .ContinueWith(_ => Extract(), cancellationToken)
-                .ContinueWith(_ => AddLog("Update complete."));
+                AddLog("Forge is outdated.");
+                var messageBoxResult = MessageBox.Show("Forge is outdated, do you want to update and start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
+                if (messageBoxResult == MessageBoxResult.Yes)
+                {
+                    AddLog("Updating to lastest version...");
+                    await DownloadAsync(cancellationToken)
+                        .ContinueWith(_ => Extract(), cancellationToken)
+                        .ContinueWith(_ => AddLog("Update complete."), cancellationToken)
+                        .ContinueWith(_ => Launch(), cancellationToken);
+                }
             }
             else
+            {
                 AddLog("Forge is up-to-date.");
+                var messageBoxResult = MessageBox.Show("Forge is up-to-date, do you want to start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
+                if (messageBoxResult == MessageBoxResult.Yes)
+                    Launch();
+            }
         }
 
         // Current version
-        private string _currentVersion;
+        private string _currentVersion = null!;
         public string CurrentVersion
         {
             get => _currentVersion;
@@ -92,7 +113,7 @@ namespace ForgeLauncher.WPF
             protected set => SetProperty(ref _latestFilename, value);
         }
 
-        private string _latestVersion;
+        private string _latestVersion = null!;
         public string LatestVersion
         {
             get => _latestVersion;
@@ -176,7 +197,7 @@ namespace ForgeLauncher.WPF
         {
             try
             {
-                AddLog("Downloading data...");
+                AddLog("Downloading update...");
 
                 IsDownloading = true;
                 var dailySnapshotsUrl = ConfigurationManager.AppSettings["DailySnapshotsUrl"];
@@ -186,7 +207,7 @@ namespace ForgeLauncher.WPF
                 var download = new Download();
                 await download.DownloadFileAsync(downloadUrl, destinationFilePath, HandleDownloadProgressChanged, cancellationToken);
 
-                AddLog("Data downloaded.");
+                AddLog("Update downloaded.");
             }
             catch (Exception ex)
             {
@@ -209,7 +230,7 @@ namespace ForgeLauncher.WPF
         {
             try
             {
-                AddLog("Extracting data...");
+                AddLog("Unpacking update...");
 
                 IsExtracting = true;
                 var sourceFilePath = Path.Combine(Path.GetTempPath(), LatestFilename);
@@ -217,11 +238,11 @@ namespace ForgeLauncher.WPF
                 var extract = new Extract();
                 extract.ExtractTarBz2(sourceFilePath, forgePath);
 
-                AddLog("Extraction complete.");
+                AddLog("Update unpacked.");
             }
             catch (Exception ex)
             {
-                AddLog("Extraction failed!");
+                AddLog("Unpack failed!");
             }
             finally
             {
@@ -244,6 +265,7 @@ namespace ForgeLauncher.WPF
         {
             try
             {
+                AddLog("Launching forge...");
                 var forgePath = ConfigurationManager.AppSettings["ForgeInstallationFolder"];
                 // TODO: use exe from combo
                 var exePath = Path.Combine(forgePath, "forge.exe");
@@ -253,7 +275,6 @@ namespace ForgeLauncher.WPF
                     WorkingDirectory = forgePath,
                     UseShellExecute = false,
                 };
-                AddLog("Launching forge...");
                 var process = Process.Start(processStartInfo);
             }
             catch (Exception ex)
@@ -305,7 +326,7 @@ namespace ForgeLauncher.WPF
 
     internal sealed class MainVMDesignData : MainVM
     {
-        public MainVMDesignData()
+        public MainVMDesignData() : base(true)
         {
             IsDownloading = true;
             DownloadProgress = 15;

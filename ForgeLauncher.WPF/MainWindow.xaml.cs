@@ -11,7 +11,7 @@ namespace ForgeLauncher.WPF
         {
             InitializeComponent();
 
-            DataContext = new MainVM();
+            DataContext = new MainVM(true);
         }
     }
 }
