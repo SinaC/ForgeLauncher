@@ -17,18 +17,14 @@ namespace ForgeLauncher.WPF
     {
         private SettingsManager SettingsManager { get; }
 
-        protected MainVM()
+        public MainVM()
         {
             Logs = new ObservableCollection<string>
             {
                 "Application started."
             };
-        }
 
-        public MainVM(bool initialize)
-            : this()
-        {
-            if (initialize)
+            if (!DesignMode.IsInDesignModeStatic)
             {
                 SettingsManager = new SettingsManager();
                 InitializeAsync(CancellationToken.None);
@@ -42,7 +38,7 @@ namespace ForgeLauncher.WPF
         {
             try
             {
-                var versionChecker = new VersionChecker();
+                var versionChecker = new VersionChecker(SettingsManager);
                 Log("Checking local version...");
                 var localVersion = versionChecker.CheckLocalVersion();
                 if (localVersion == null)
@@ -280,7 +276,7 @@ namespace ForgeLauncher.WPF
 
     internal sealed class MainVMDesignData : MainVM
     {
-        public MainVMDesignData() : base(true)
+        public MainVMDesignData()
         {
             IsDownloading = true;
             DownloadProgress = 15;

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 namespace ForgeLauncher.WPF
 {
@@ -9,9 +10,16 @@ namespace ForgeLauncher.WPF
     {
         public MainWindow()
         {
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
 
-            DataContext = new MainVM(true);
+                DataContext = new MainVM();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }
