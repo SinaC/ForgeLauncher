@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -12,9 +11,16 @@ namespace ForgeLauncher.WPF
     // better version compare
     public class VersionChecker
     {
+        private SettingsManager SettingsManager { get; }
+
+        public VersionChecker(SettingsManager settingsManager)
+        {
+            SettingsManager = settingsManager;
+        }
+
         public string CheckLocalVersion()
         {
-            var forgePath = ConfigurationManager.AppSettings["ForgeInstallationFolder"];
+            var forgePath = SettingsManager.ForgeInstallationFolder;
             var guiDesktopSnapshotJarVersions = Directory.EnumerateFiles(forgePath, "forge-gui-desktop-*-SNAPSHOT-jar-with-dependencies.jar").Select(x => ExtractVersionFromJar(x)).ToList();
             var localVersion = guiDesktopSnapshotJarVersions.OrderByDescending(x => x).FirstOrDefault();
             return localVersion;
@@ -22,7 +28,7 @@ namespace ForgeLauncher.WPF
 
         public async Task<(string serverVersion, string serverVersionFilename)> CheckServerVersionAsync(CancellationToken cancellationToken)
         {
-            var dailySnapshotsUrl = ConfigurationManager.AppSettings["DailySnapshotsUrl"];
+            var dailySnapshotsUrl = SettingsManager.DailySnapshotsUrl;
 
             var download = new Downloader();
             var html = await download.DownloadHtmlAsync(dailySnapshotsUrl, cancellationToken);

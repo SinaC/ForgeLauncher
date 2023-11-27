@@ -9,9 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="ForgeLauncher.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="ForgeLauncher.ico" />
   </ItemGroup>
 
   <ItemGroup>
