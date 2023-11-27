@@ -42,7 +42,9 @@ namespace ForgeLauncher.WPF
                 Log("Checking local version...");
                 var localVersion = versionChecker.CheckLocalVersion();
                 if (localVersion == null)
-                    Log("Forge is not installed");
+                    Log("Forge is not installed!");
+                else
+                    Log($"Local version is {localVersion}");
                 Log("Checking server version...");
                 await versionChecker.CheckServerVersionAsync(cancellationToken)
                     .ContinueWith(t =>
@@ -51,7 +53,7 @@ namespace ForgeLauncher.WPF
                             Log($"Cannot retrieve server version!");
                         else
                         {
-                            Log($"Latest version is {t.Result.serverVersion}");
+                            Log($"Server version is {t.Result.serverVersion}");
                             ServerVersionFilename = t.Result.serverVersionFilename;
                         }
                         return t.Result;
