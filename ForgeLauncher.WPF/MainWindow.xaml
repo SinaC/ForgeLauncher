@@ -14,9 +14,11 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+        <!-- Options -->
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -50,8 +52,10 @@
                     Content="Launch"
                     Command="{Binding LaunchCommand}"/>
         </Grid>
+        <!-- Settings -->
+        <!-- TODO -->
         <!-- Logs -->
-        <ItemsControl Grid.Row="1"
+        <ItemsControl Grid.Row="2"
                       Margin="5,2"
                       ItemsSource="{Binding Logs}">
             <ItemsControl.Template>
@@ -68,7 +72,7 @@
             </ItemsControl.ItemsPanel>
         </ItemsControl>
         <!-- Progress -->
-        <ProgressBar Grid.Row="2"
+        <ProgressBar Grid.Row="3"
                      Height="10"
                      Margin="5,0"
                      Visibility="{Binding IsInProgress, Converter={StaticResource BooleanToVisibilityConverter}}"
