@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Configuration;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -16,6 +15,8 @@ namespace ForgeLauncher.WPF
 {
     public class MainVM : ObservableObject
     {
+        private SettingsManager SettingsManager { get; }
+
         protected MainVM()
         {
             Logs = new ObservableCollection<string>
@@ -28,7 +29,10 @@ namespace ForgeLauncher.WPF
             : this()
         {
             if (initialize)
+            {
+                SettingsManager = new SettingsManager();
                 InitializeAsync(CancellationToken.None);
+            }
         }
 
         private string ServerVersionFilename { get; set; } = null!;
@@ -143,7 +147,7 @@ namespace ForgeLauncher.WPF
                 Log("Downloading update...");
 
                 IsDownloading = true;
-                var dailySnapshotsUrl = ConfigurationManager.AppSettings["DailySnapshotsUrl"];
+                var dailySnapshotsUrl = SettingsManager.DailySnapshotsUrl;
                 var downloadUrl = dailySnapshotsUrl + ServerVersionFilename;
                 var destinationFilePath = Path.Combine(Path.GetTempPath(), ServerVersionFilename);
 
@@ -177,7 +181,7 @@ namespace ForgeLauncher.WPF
 
                 IsUnpacking = true;
                 var sourceFilePath = Path.Combine(Path.GetTempPath(), ServerVersionFilename);
-                var forgePath = ConfigurationManager.AppSettings["ForgeInstallationFolder"];
+                var forgePath = SettingsManager.ForgeInstallationFolder;
                 var unpacker = new Unpacker();
                 unpacker.ExtractTarBz2(sourceFilePath, forgePath);
 
@@ -209,7 +213,7 @@ namespace ForgeLauncher.WPF
             try
             {
                 Log("Launching forge...");
-                var forgePath = ConfigurationManager.AppSettings["ForgeInstallationFolder"];
+                var forgePath = SettingsManager.ForgeInstallationFolder;
                 // TODO: use exe from combo
                 var exePath = Path.Combine(forgePath, "forge.exe");
                 if (!File.Exists(exePath))
@@ -270,7 +274,7 @@ namespace ForgeLauncher.WPF
         //
         public void Log(string logEntry)
         {
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(() => Logs.Add(logEntry));
+            Application.Current.Dispatcher.BeginInvoke(() => Logs.Add(logEntry));
         }
     }
 
