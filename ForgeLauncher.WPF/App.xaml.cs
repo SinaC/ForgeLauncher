@@ -1,8 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using ForgeLauncher.WPF.Attributes;
+using ForgeLauncher.WPF.Extensions;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Linq;
+using Serilog;
 using System.Reflection;
 using System.Windows;
 
@@ -13,38 +12,27 @@ namespace ForgeLauncher.WPF
     /// </summary>
     public partial class App : Application
     {
+        private const string LogFile = "ForgeLauncher.WPF.log";
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            var serviceProvider = ConfigureServices();
+            ILogger logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .WriteTo.File(LogFile, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information, rollingInterval: RollingInterval.Infinite, rollOnFileSizeLimit: false)
+                .CreateLogger();
+
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddExportedTypesFromAssembly(Assembly.GetAssembly(typeof(App)));
+            serviceCollection.AddSingleton(logger);
+
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
             Ioc.Default.ConfigureServices(serviceProvider);
 
             var mainWindow = Ioc.Default.GetService<MainWindow>()!;
             mainWindow.ShowDialog();
-        }
-
-        private IServiceProvider ConfigureServices()
-        {
-            var serviceCollection = new ServiceCollection();
-            foreach(var type in Assembly.GetAssembly(typeof(App))?.GetTypes() ?? Enumerable.Empty<Type>())
-            {
-                var exportAttributes = type.GetCustomAttributes<ExportAttribute>();
-                if (exportAttributes != null)
-                {
-                    var isSingleton = type.GetCustomAttribute<SharedAttribute>() != null;
-                    foreach (var exportAttribute in exportAttributes)
-                    {
-                        var contractType = exportAttribute.ContractType ?? type;
-                        if (isSingleton)
-                            serviceCollection.AddSingleton(contractType, type);
-                        else
-                            serviceCollection.AddTransient(contractType, type);
-                    }
-                }
-            }
-
-            return serviceCollection.BuildServiceProvider();
         }
     }
 }

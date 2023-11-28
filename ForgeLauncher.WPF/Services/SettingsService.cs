@@ -1,4 +1,5 @@
 ﻿using ForgeLauncher.WPF.Attributes;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,31 +10,30 @@ namespace ForgeLauncher.WPF.Services
     [Export(typeof(ISettingsService)), Shared]
     public class SettingsService : ISettingsService
     {
-        private const string SettingFileName = "ForgeLauncher.settings";
+        private const string SettingFileName = "ForgeLauncher.WPF.config";
         private const string DefaultDailySnapshotUrl = "https://downloads.cardforge.org/dailysnapshots/";
 
         private const string ForgeInstallationFolderKey = "ForgeInstallationFolder";
         private const string DailySnapshotsUrlKey = "DailySnapshotsUrl";
 
-        private Dictionary<string, string> Settings { get; } = new Dictionary<string, string>();
+        private ILogger Logger { get; }
+        private IDictionary<string, string> Settings { get; } = new Dictionary<string, string>();
+
+        public SettingsService(ILogger logger)
+        {
+            Logger = logger;
+        }
 
         public string ForgeInstallationFolder
         {
-            get => GetOrDefault(Settings, ForgeInstallationFolderKey, AppDomain.CurrentDomain.BaseDirectory);
-            set
-            {
-                Settings[ForgeInstallationFolderKey] = value;
-                Save();
-            }
+            get => GetOrDefault(ForgeInstallationFolderKey, AppDomain.CurrentDomain.BaseDirectory);
+            set => Set(ForgeInstallationFolderKey, value);
         }
+
         public string DailySnapshotsUrl
         {
-            get => GetOrDefault(Settings, DailySnapshotsUrlKey, DefaultDailySnapshotUrl);
-            set
-            {
-                Settings[DailySnapshotsUrlKey] = value;
-                Save();
-            }
+            get => GetOrDefault(DailySnapshotsUrlKey, DefaultDailySnapshotUrl);
+            set => Set(DailySnapshotsUrlKey, value);
         }
 
         private void Load()
@@ -53,7 +53,7 @@ namespace ForgeLauncher.WPF.Services
                 }
                 catch (Exception ex)
                 {
-                    //TODO
+                    Logger.Error(ex.ToString());
                 }
             }
         }
@@ -62,22 +62,28 @@ namespace ForgeLauncher.WPF.Services
         {
             try
             {
-                var json = JsonSerializer.Serialize(Settings);
-                File.WriteAllText(json, SettingFileName);
+                var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(SettingFileName, json);
             }
             catch (Exception ex)
             {
-                //TODO
+                Logger.Error(ex.ToString());
             }
         }
 
-        private TValue GetOrDefault<TKey, TValue>(IReadOnlyDictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue)
+        private string GetOrDefault(string key, string defaultValue)
         {
-            if (dictionary.Count == 0)
+            if (Settings.Count == 0)
                 Load();
-            if (!dictionary.TryGetValue(key, out var value))
+            if (!Settings.TryGetValue(key, out var value))
                 return defaultValue;
             return value;
+        }
+
+        private void Set(string key, string value)
+        {
+            Settings[key] = value;
+            Save();
         }
     }
 }
