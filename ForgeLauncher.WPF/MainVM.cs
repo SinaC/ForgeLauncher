@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using ForgeLauncher.WPF.Attributes;
 using ForgeLauncher.WPF.Services;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,12 +19,14 @@ namespace ForgeLauncher.WPF
     [Export]
     public class MainVM : ObservableObject
     {
+        private ILogger Logger { get; }
         private ISettingsService SettingsService { get; }
         private IDownloadService DownloadService { get; }
         private IUnpackService UnpackService { get; }
 
-        public MainVM(ISettingsService settingsService, IDownloadService downloadService, IUnpackService unpackService)
+        public MainVM(ILogger logger, ISettingsService settingsService, IDownloadService downloadService, IUnpackService unpackService)
         {
+            Logger = logger;
             SettingsService = settingsService;
             DownloadService = downloadService;
             UnpackService = unpackService;
@@ -34,9 +37,7 @@ namespace ForgeLauncher.WPF
             };
 
             if (!DesignMode.IsInDesignModeStatic)
-            {
                 InitializeAsync(CancellationToken.None);
-            }
         }
 
         private string ServerVersionFilename { get; set; } = null!;
@@ -58,7 +59,7 @@ namespace ForgeLauncher.WPF
                     .ContinueWith(t =>
                     {
                         if (t.Result == default)
-                            Log($"Cannot retrieve server version!");
+                            LogError($"Cannot retrieve server version!");
                         else
                         {
                             Log($"Server version is {t.Result.serverVersion}");
@@ -70,7 +71,7 @@ namespace ForgeLauncher.WPF
             }
             catch (Exception ex)
             {
-                Log("Error while checking version!");
+                LogError("Error while checking version!");
             }
         }
 
@@ -124,7 +125,7 @@ namespace ForgeLauncher.WPF
         {
             if (ServerVersionFilename == null)
             {
-                Log("Cannot update. Server issue!");
+                LogError("Cannot update. Server issue!");
                 MessageBox.Show("Cannot update. Server issue!");
                 return;
             }
@@ -150,7 +151,7 @@ namespace ForgeLauncher.WPF
         {
             try
             {
-                Log("Downloading update...");
+                Log($"Downloading update...");
 
                 IsDownloading = true;
                 var dailySnapshotsUrl = SettingsService.DailySnapshotsUrl;
@@ -163,7 +164,7 @@ namespace ForgeLauncher.WPF
             }
             catch (Exception ex)
             {
-                Log("Download failed!");
+                LogError("Download failed!");
             }
             finally
             {
@@ -193,7 +194,7 @@ namespace ForgeLauncher.WPF
             }
             catch (Exception ex)
             {
-                Log("Unpack failed!");
+                LogError("Unpack failed!");
             }
             finally
             {
@@ -236,7 +237,7 @@ namespace ForgeLauncher.WPF
             }
             catch (Exception ex)
             {
-                Log("Error while launching forge");
+                LogError("Error while launching forge");
             }
         }
 
@@ -278,13 +279,22 @@ namespace ForgeLauncher.WPF
         //
         public void Log(string logEntry)
         {
+            if (!DesignMode.IsInDesignModeStatic)
+                Logger.Information(logEntry);
+            Application.Current.Dispatcher.BeginInvoke(() => Logs.Add(logEntry));
+        }
+
+        public void LogError(string logEntry)
+        {
+            if (!DesignMode.IsInDesignModeStatic)
+                Logger.Error(logEntry);
             Application.Current.Dispatcher.BeginInvoke(() => Logs.Add(logEntry));
         }
     }
 
     internal sealed class MainVMDesignData : MainVM
     {
-        public MainVMDesignData(): base(null!, null!, null!)
+        public MainVMDesignData(): base(null!, null!, null!, null!)
         {
             IsDownloading = true;
             DownloadProgress = 15;
