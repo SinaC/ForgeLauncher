@@ -1,8 +1,7 @@
-﻿namespace ForgeLauncher.WPF.Services
+﻿namespace ForgeLauncher.WPF.Services;
+
+public interface ISettingsService
 {
-    public interface ISettingsService
-    {
-        public string ForgeInstallationFolder { get; set; }
-        public string DailySnapshotsUrl { get; set; }
-    }
+    public string ForgeInstallationFolder { get; set; }
+    public string DailySnapshotsUrl { get; set; }
 }
