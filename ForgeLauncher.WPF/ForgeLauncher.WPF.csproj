@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>ForgeLauncher.ico</ApplicationIcon>
+    <AssemblyName>Forge Launcher.WPF</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
