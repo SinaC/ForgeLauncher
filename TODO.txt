@@ -1,4 +1,4 @@
-DI/Ioc
+bind snapshot/release and exe in VM
 Logging
 Better icon
 use MaterialDesign dialog as messagebox

@@ -1,12 +1,14 @@
-﻿using System;
+﻿using ForgeLauncher.WPF.Attributes;
+using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ForgeLauncher.WPF
+namespace ForgeLauncher.WPF.Services
 {
-    public class Downloader
+    [Export(typeof(IDownloadService)), Shared]
+    public class DownloadService : IDownloadService
     {
         public async Task<string> DownloadHtmlAsync(string url, CancellationToken cancellationToken)
         {
