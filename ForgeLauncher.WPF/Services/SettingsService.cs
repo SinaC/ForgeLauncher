@@ -1,11 +1,13 @@
-﻿using System;
+﻿using ForgeLauncher.WPF.Attributes;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
-namespace ForgeLauncher.WPF
+namespace ForgeLauncher.WPF.Services
 {
-    public class SettingsManager
+    [Export(typeof(ISettingsService)), Shared]
+    public class SettingsService : ISettingsService
     {
         private const string SettingFileName = "ForgeLauncher.settings";
         private const string DefaultDailySnapshotUrl = "https://downloads.cardforge.org/dailysnapshots/";
@@ -14,11 +16,6 @@ namespace ForgeLauncher.WPF
         private const string DailySnapshotsUrlKey = "DailySnapshotsUrl";
 
         private Dictionary<string, string> Settings { get; } = new Dictionary<string, string>();
-
-        public SettingsManager()
-        {
-            Load();
-        }
 
         public string ForgeInstallationFolder
         {
@@ -47,9 +44,12 @@ namespace ForgeLauncher.WPF
                 {
                     var json = File.ReadAllText(SettingFileName);
                     var dictionary = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-                    Settings.Clear();
-                    foreach (var kv in dictionary)
-                        Settings.Add(kv.Key, kv.Value);
+                    if (dictionary != null)
+                    {
+                        Settings.Clear();
+                        foreach (var kv in dictionary)
+                            Settings.Add(kv.Key, kv.Value);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -71,8 +71,10 @@ namespace ForgeLauncher.WPF
             }
         }
 
-        private static TValue GetOrDefault<TKey, TValue>(IReadOnlyDictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue)
+        private TValue GetOrDefault<TKey, TValue>(IReadOnlyDictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue)
         {
+            if (dictionary.Count == 0)
+                Load();
             if (!dictionary.TryGetValue(key, out var value))
                 return defaultValue;
             return value;

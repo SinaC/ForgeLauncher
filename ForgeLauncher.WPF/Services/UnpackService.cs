@@ -1,11 +1,13 @@
-﻿using SharpCompress.Common;
+﻿using ForgeLauncher.WPF.Attributes;
+using SharpCompress.Common;
 using SharpCompress.Readers;
 using System.IO;
 using System.Linq;
 
-namespace ForgeLauncher.WPF
+namespace ForgeLauncher.WPF.Services
 {
-    public class Unpacker
+    [Export(typeof(IUnpackService)), Shared]
+    public class UnpackService : IUnpackService
     {
         public void ExtractTarBz2(string archiveName, string destinationFolder)
         {

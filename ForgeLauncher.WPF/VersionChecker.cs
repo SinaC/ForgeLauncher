@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ForgeLauncher.WPF.Services;
 
 namespace ForgeLauncher.WPF
 {
@@ -11,27 +12,28 @@ namespace ForgeLauncher.WPF
     // better version compare
     public class VersionChecker
     {
-        private SettingsManager SettingsManager { get; }
+        private ISettingsService SettingsService { get; }
+        private IDownloadService DownloadService { get; }
 
-        public VersionChecker(SettingsManager settingsManager)
+        public VersionChecker(ISettingsService settingsService, IDownloadService downloadService)
         {
-            SettingsManager = settingsManager;
+            SettingsService = settingsService;
+            DownloadService = downloadService;
         }
 
         public string CheckLocalVersion()
         {
-            var forgePath = SettingsManager.ForgeInstallationFolder;
+            var forgePath = SettingsService.ForgeInstallationFolder;
             var guiDesktopSnapshotJarVersions = Directory.EnumerateFiles(forgePath, "forge-gui-desktop-*-SNAPSHOT-jar-with-dependencies.jar").Select(x => ExtractVersionFromJar(x)).ToList();
             var localVersion = guiDesktopSnapshotJarVersions.OrderByDescending(x => x).FirstOrDefault();
-            return localVersion;
+            return localVersion!;
         }
 
         public async Task<(string serverVersion, string serverVersionFilename)> CheckServerVersionAsync(CancellationToken cancellationToken)
         {
-            var dailySnapshotsUrl = SettingsManager.DailySnapshotsUrl;
+            var dailySnapshotsUrl = SettingsService.DailySnapshotsUrl;
 
-            var download = new Downloader();
-            var html = await download.DownloadHtmlAsync(dailySnapshotsUrl, cancellationToken);
+            var html = await DownloadService.DownloadHtmlAsync(dailySnapshotsUrl, cancellationToken);
 
             // search for <a href="forge-gui-desktop
             var guiDesktopAhrefLine = html.Split(Environment.NewLine.ToCharArray()).FirstOrDefault(x => x.TrimStart().StartsWith("<a href=\"forge-gui-desktop"));

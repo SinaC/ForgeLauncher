@@ -9,17 +9,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Properties\**" />
+    <EmbeddedResource Remove="Properties\**" />
+    <None Remove="Properties\**" />
+    <Page Remove="Properties\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="ForgeLauncher.ico" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="SharpCompress" Version="0.34.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

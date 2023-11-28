@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ForgeLauncher.WPF.Attributes;
+using ForgeLauncher.WPF.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,12 +15,19 @@ using System.Windows.Input;
 
 namespace ForgeLauncher.WPF
 {
+    [Export]
     public class MainVM : ObservableObject
     {
-        private SettingsManager SettingsManager { get; }
+        private ISettingsService SettingsService { get; }
+        private IDownloadService DownloadService { get; }
+        private IUnpackService UnpackService { get; }
 
-        public MainVM()
+        public MainVM(ISettingsService settingsService, IDownloadService downloadService, IUnpackService unpackService)
         {
+            SettingsService = settingsService;
+            DownloadService = downloadService;
+            UnpackService = unpackService;
+
             Logs = new ObservableCollection<string>
             {
                 "Application started."
@@ -26,7 +35,6 @@ namespace ForgeLauncher.WPF
 
             if (!DesignMode.IsInDesignModeStatic)
             {
-                SettingsManager = new SettingsManager();
                 InitializeAsync(CancellationToken.None);
             }
         }
@@ -38,7 +46,7 @@ namespace ForgeLauncher.WPF
         {
             try
             {
-                var versionChecker = new VersionChecker(SettingsManager);
+                var versionChecker = new VersionChecker(SettingsService, DownloadService);
                 Log("Checking local version...");
                 var localVersion = versionChecker.CheckLocalVersion();
                 if (localVersion == null)
@@ -58,7 +66,7 @@ namespace ForgeLauncher.WPF
                         }
                         return t.Result;
                     }, cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
-                    .ContinueWith(t => UpdateIfNeededAsync(localVersion, t.Result.serverVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+                    .ContinueWith(t => UpdateIfNeededAsync(localVersion!, t.Result.serverVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
             }
             catch (Exception ex)
             {
@@ -145,12 +153,11 @@ namespace ForgeLauncher.WPF
                 Log("Downloading update...");
 
                 IsDownloading = true;
-                var dailySnapshotsUrl = SettingsManager.DailySnapshotsUrl;
+                var dailySnapshotsUrl = SettingsService.DailySnapshotsUrl;
                 var downloadUrl = dailySnapshotsUrl + ServerVersionFilename;
                 var destinationFilePath = Path.Combine(Path.GetTempPath(), ServerVersionFilename);
 
-                var downloader = new Downloader();
-                await downloader.DownloadFileAsync(downloadUrl, destinationFilePath, HandleDownloadProgressChanged, cancellationToken);
+                await DownloadService.DownloadFileAsync(downloadUrl, destinationFilePath, HandleDownloadProgressChanged, cancellationToken);
 
                 Log("Update downloaded.");
             }
@@ -179,9 +186,8 @@ namespace ForgeLauncher.WPF
 
                 IsUnpacking = true;
                 var sourceFilePath = Path.Combine(Path.GetTempPath(), ServerVersionFilename);
-                var forgePath = SettingsManager.ForgeInstallationFolder;
-                var unpacker = new Unpacker();
-                unpacker.ExtractTarBz2(sourceFilePath, forgePath);
+                var forgePath = SettingsService.ForgeInstallationFolder;
+                UnpackService.ExtractTarBz2(sourceFilePath, forgePath);
 
                 Log("Update unpacked.");
             }
@@ -211,7 +217,7 @@ namespace ForgeLauncher.WPF
             try
             {
                 Log("Launching forge...");
-                var forgePath = SettingsManager.ForgeInstallationFolder;
+                var forgePath = SettingsService.ForgeInstallationFolder;
                 // TODO: use exe from combo
                 var exePath = Path.Combine(forgePath, "forge.exe");
                 if (!File.Exists(exePath))
@@ -278,7 +284,7 @@ namespace ForgeLauncher.WPF
 
     internal sealed class MainVMDesignData : MainVM
     {
-        public MainVMDesignData()
+        public MainVMDesignData(): base(null!, null!, null!)
         {
             IsDownloading = true;
             DownloadProgress = 15;

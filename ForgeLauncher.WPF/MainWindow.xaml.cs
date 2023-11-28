@@ -1,25 +1,16 @@
-﻿using System;
+﻿using ForgeLauncher.WPF.Attributes;
 using System.Windows;
 
 namespace ForgeLauncher.WPF
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
+    [Export]
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        public MainWindow(MainVM mainVM)
         {
-            try
-            {
-                InitializeComponent();
+            InitializeComponent();
 
-                DataContext = new MainVM();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            DataContext = mainVM;
         }
     }
 }
