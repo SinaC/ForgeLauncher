@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,13 +24,15 @@ public class MainVM : ObservableObject
     private ISettingsService SettingsService { get; }
     private IDownloadService DownloadService { get; }
     private IUnpackService UnpackService { get; }
+    private IVersioningService VersioningService { get; }
 
-    public MainVM(ILogger logger, ISettingsService settingsService, IDownloadService downloadService, IUnpackService unpackService)
+    public MainVM(ILogger logger, ISettingsService settingsService, IDownloadService downloadService, IUnpackService unpackService, IVersioningService versioningService)
     {
         Logger = logger;
         SettingsService = settingsService;
         DownloadService = downloadService;
         UnpackService = unpackService;
+        VersioningService = versioningService;
 
         Logs = new ObservableCollection<string>
         {
@@ -47,27 +50,23 @@ public class MainVM : ObservableObject
     {
         try
         {
-            var versionChecker = new VersionChecker(SettingsService, DownloadService);
             Log("Checking local version...");
-            var localVersion = versionChecker.CheckLocalVersion();
+            var localVersion = await VersioningService.GetLocalVersionAsync(cancellationToken);
             if (localVersion == null)
                 Log("Forge is not installed!");
             else
                 Log($"Local version is {localVersion}");
+
             Log("Checking server version...");
-            await versionChecker.CheckServerVersionAsync(cancellationToken)
-                .ContinueWith(t =>
-                {
-                    if (t.Result == default)
-                        LogError($"Cannot retrieve server version!");
-                    else
-                    {
-                        Log($"Server version is {t.Result.serverVersion}");
-                        ServerVersionFilename = t.Result.serverVersionFilename;
-                    }
-                    return t.Result;
-                }, cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
-                .ContinueWith(t => UpdateIfNeededAsync(localVersion!, t.Result.serverVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+            var serverVersion = await VersioningService.GetServerVersionAsync(cancellationToken);
+            if (serverVersion == default)
+                LogError($"Cannot retrieve server version!");
+            else
+            {
+                Log($"Server version is {serverVersion.serverVersion}");
+                ServerVersionFilename = serverVersion.serverVersionFilename;
+            }
+            await UpdateIfNeededAsync(localVersion!, serverVersion.serverVersion, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -89,10 +88,11 @@ public class MainVM : ObservableObject
                 await DownloadAsync(cancellationToken)
                     .ContinueWith(_ => Unpack(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Log("Installation complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                    .ContinueWith(_ => VersioningService.SaveLatestVersionAsync(serverVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Launch(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
             }
         }
-        else if (!serverVersion.Contains(localVersion)) // updated needed
+        else if (VersioningService.IsVersionOutdated(localVersion, serverVersion))
         {
             Log("Forge is outdated.");
             var messageBoxResult = MessageBox.Show("Forge is outdated, do you want to update and start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
@@ -102,6 +102,7 @@ public class MainVM : ObservableObject
                 await DownloadAsync(cancellationToken)
                     .ContinueWith(_ => Unpack(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Log("Update complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                    .ContinueWith(_ => VersioningService.SaveLatestVersionAsync(serverVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Launch(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
             }
         }
@@ -281,7 +282,7 @@ public class MainVM : ObservableObject
     {
         if (!DesignMode.IsInDesignModeStatic)
             Logger.Information(logEntry);
-        Application.Current.Dispatcher.BeginInvoke(() => Logs.Add(logEntry));
+        Application.Current.Dispatcher.BeginInvoke(() => Logs.Insert(0, logEntry));
     }
 
     public void LogError(string logEntry)
@@ -294,9 +295,9 @@ public class MainVM : ObservableObject
 
 internal sealed class MainVMDesignData : MainVM
 {
-    public MainVMDesignData(): base(null!, null!, null!, null!)
+    public MainVMDesignData(): base(null!, null!, null!, null!, null!)
     {
-        IsDownloading = true;
+        IsDownloading = false;
         DownloadProgress = 15;
 
         Logs.Add("Line 1");
