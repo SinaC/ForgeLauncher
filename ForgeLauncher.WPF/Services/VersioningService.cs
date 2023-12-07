@@ -1,35 +1,52 @@
-﻿using System;
+﻿using ForgeLauncher.WPF.Attributes;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ForgeLauncher.WPF.Services;
 
-namespace ForgeLauncher.WPF;
+namespace ForgeLauncher.WPF.Services;
 
 // TODO:
 // snapshot and release
 // better version compare
-public class VersionChecker
+[Export(typeof(IVersioningService)), Shared]
+public class VersioningService : IVersioningService
 {
+    private const string LastVersionFile = "ForgeLauncher.WPF.LastVersion.txt";
+
     private ISettingsService SettingsService { get; }
     private IDownloadService DownloadService { get; }
 
-    public VersionChecker(ISettingsService settingsService, IDownloadService downloadService)
+    public VersioningService(ISettingsService settingsService, IDownloadService downloadService)
     {
         SettingsService = settingsService;
         DownloadService = downloadService;
     }
 
-    public string CheckLocalVersion()
+    public async Task<string> GetLocalVersionAsync(CancellationToken cancellationToken)
     {
+        // check last version file
+        if (File.Exists(LastVersionFile))
+        {
+            var lines = await File.ReadAllLinesAsync(LastVersionFile, cancellationToken);
+            var version = lines?.FirstOrDefault();
+            if (version != null)
+                return version;
+        }
+        // then check jar version
         var forgePath = SettingsService.ForgeInstallationFolder;
         var guiDesktopSnapshotJarVersions = Directory.EnumerateFiles(forgePath, "forge-gui-desktop-*-SNAPSHOT-jar-with-dependencies.jar").Select(x => ExtractVersionFromJar(x)).ToList();
         var localVersion = guiDesktopSnapshotJarVersions.OrderByDescending(x => x).FirstOrDefault();
         return localVersion!;
     }
 
-    public async Task<(string serverVersion, string serverVersionFilename)> CheckServerVersionAsync(CancellationToken cancellationToken)
+    public async Task SaveLatestVersionAsync(string version, CancellationToken cancellationToken)
+    {
+        await File.WriteAllLinesAsync(LastVersionFile, new[] { version }, cancellationToken);
+    }
+
+    public async Task<(string serverVersion, string serverVersionFilename)> GetServerVersionAsync(CancellationToken cancellationToken)
     {
         var dailySnapshotsUrl = SettingsService.DailySnapshotsUrl;
 
@@ -55,6 +72,13 @@ public class VersionChecker
             }
         }
         return default;
+    }
+
+    public bool IsVersionOutdated(string localVersion, string serverVersion)
+    {
+        if (localVersion.Contains("SNAPSHOT"))
+            return localVersion.CompareTo(serverVersion) < 0;
+        return !serverVersion.Contains(localVersion);
     }
 
     private static string ExtractVersionFromJar(string filename)

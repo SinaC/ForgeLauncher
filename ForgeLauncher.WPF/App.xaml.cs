@@ -27,7 +27,6 @@ public partial class App : Application
         serviceCollection.AddExportedTypesFromAssembly(Assembly.GetAssembly(typeof(App)));
         serviceCollection.AddSingleton(logger);
 
-
         var serviceProvider = serviceCollection.BuildServiceProvider();
         Ioc.Default.ConfigureServices(serviceProvider);
 
