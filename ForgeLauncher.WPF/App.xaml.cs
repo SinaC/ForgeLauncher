@@ -12,7 +12,7 @@ namespace ForgeLauncher.WPF;
 /// </summary>
 public partial class App : Application
 {
-    private const string LogFile = "ForgeLauncher.WPF.log";
+    private const string LogFile = "Forge Launcher.WPF.log";
 
     protected override void OnStartup(StartupEventArgs e)
     {

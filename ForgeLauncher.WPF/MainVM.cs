@@ -43,6 +43,7 @@ public class MainVM : ObservableObject
             InitializeAsync(CancellationToken.None);
     }
 
+    private string ServerVersion { get; set; } = null!;
     private string ServerVersionFilename { get; set; } = null!;
 
     // Check current version, check latest version, update if needed then launch
@@ -64,6 +65,7 @@ public class MainVM : ObservableObject
             else
             {
                 Log($"Server version is {serverVersion.serverVersion}");
+                ServerVersion = serverVersion.serverVersion;
                 ServerVersionFilename = serverVersion.serverVersionFilename;
             }
             await UpdateIfNeededAsync(localVersion!, serverVersion.serverVersion, cancellationToken);
@@ -78,7 +80,6 @@ public class MainVM : ObservableObject
     {
         if (serverVersion == null)
             return;
-        // TODO: center message box on Wpf window
         if (localVersion == null) // not installed
         {
             var messageBoxResult = MessageBox.Show("Forge is not installed, do you want to install and start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
@@ -87,8 +88,8 @@ public class MainVM : ObservableObject
                 Log("Installing Forge...");
                 await DownloadAsync(cancellationToken)
                     .ContinueWith(_ => Unpack(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
-                    .ContinueWith(_ => Log("Installation complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => VersioningService.SaveLatestVersionAsync(serverVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                    .ContinueWith(_ => Log("Installation complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Launch(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
             }
         }
@@ -101,8 +102,8 @@ public class MainVM : ObservableObject
                 Log("Updating to lastest version...");
                 await DownloadAsync(cancellationToken)
                     .ContinueWith(_ => Unpack(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
-                    .ContinueWith(_ => Log("Update complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => VersioningService.SaveLatestVersionAsync(serverVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                    .ContinueWith(_ => Log("Update complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Launch(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
             }
         }
@@ -131,7 +132,8 @@ public class MainVM : ObservableObject
             return;
         }
         await DownloadAsync(cancellationToken)
-            .ContinueWith(_ => Unpack(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+            .ContinueWith(_ => Unpack(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+            .ContinueWith(_ => VersioningService.SaveLatestVersionAsync(ServerVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
     }
 
     private bool _isDownloading;
