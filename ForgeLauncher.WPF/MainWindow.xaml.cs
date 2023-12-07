@@ -1,4 +1,5 @@
 ﻿using ForgeLauncher.WPF.Attributes;
+using System.Reflection;
 using System.Windows;
 
 namespace ForgeLauncher.WPF;
@@ -11,5 +12,9 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         DataContext = mainVM;
+
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        if (version != null)
+            Title = $"Forge Launcher - {version.Major}.{version.Minor}.{version.Build}";
     }
 }

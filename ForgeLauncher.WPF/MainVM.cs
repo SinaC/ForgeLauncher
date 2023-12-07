@@ -68,7 +68,7 @@ public class MainVM : ObservableObject
                 ServerVersion = serverVersion.serverVersion;
                 ServerVersionFilename = serverVersion.serverVersionFilename;
             }
-            await UpdateIfNeededAsync(localVersion!, serverVersion.serverVersion, cancellationToken);
+            await UpdateIfNeededAndStartForgeAsync(localVersion!, serverVersion.serverVersion, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -76,7 +76,7 @@ public class MainVM : ObservableObject
         }
     }
 
-    private async Task UpdateIfNeededAsync(string localVersion, string serverVersion, CancellationToken cancellationToken)
+    private async Task UpdateIfNeededAndStartForgeAsync(string localVersion, string serverVersion, CancellationToken cancellationToken)
     {
         if (serverVersion == null)
             return;
@@ -237,6 +237,8 @@ public class MainVM : ObservableObject
                 UseShellExecute = false,
             };
             var process = Process.Start(processStartInfo);
+            if (SettingsService.CloseWhenStartingForge)
+                Application.Current.Shutdown();
         }
         catch (Exception ex)
         {
@@ -250,22 +252,20 @@ public class MainVM : ObservableObject
 
     private async Task DisplaySettingsEditorAsync()
     {
-        var settingsVM = new SettingsVM
-        {
-            ForgeInstallationFolder = SettingsService.ForgeInstallationFolder,
-            DailySnapshotsUrl = SettingsService.DailySnapshotsUrl,
-        };
+        var settingsVM = new SettingsVM(SettingsService);
         var view = new SettingsView
         {
             DataContext = settingsVM
         };
 
         var result = await DialogHost.Show(view);
-        // save if accept
+        // save if accept clicked
         if (result is bool accept && accept)
         {
             SettingsService.ForgeInstallationFolder = settingsVM.ForgeInstallationFolder;
             SettingsService.DailySnapshotsUrl = settingsVM.DailySnapshotsUrl;
+            SettingsService.CloseWhenStartingForge = settingsVM.CloseWhenStartingForge;
+            await SettingsService.SaveAsync(CancellationToken.None);
         }
     }
 

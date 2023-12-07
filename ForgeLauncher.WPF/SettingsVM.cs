@@ -1,11 +1,23 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ForgeLauncher.WPF.Services;
 using System.Windows.Input;
 
 namespace ForgeLauncher.WPF
 {
     public class SettingsVM : ObservableObject
     {
+        protected SettingsVM()
+        {
+        }
+
+        public SettingsVM(ISettingsService settingsService)
+        {
+            ForgeInstallationFolder = settingsService.ForgeInstallationFolder;
+            DailySnapshotsUrl = settingsService.DailySnapshotsUrl;
+            CloseWhenStartingForge = settingsService.CloseWhenStartingForge;
+        }
+
         private ICommand _selectFolderCommand = null!;
         public ICommand SelectFolderCommand => _selectFolderCommand ??= new RelayCommand(SelectFolder);
 
@@ -35,9 +47,22 @@ namespace ForgeLauncher.WPF
             get => _dailySnapshotsUrl;
             set => SetProperty(ref _dailySnapshotsUrl, value);
         }
+
+        private bool _closeWhenStartingForge;
+        public bool CloseWhenStartingForge
+        {
+            get => _closeWhenStartingForge;
+            set => SetProperty(ref _closeWhenStartingForge, value);
+        }
     }
 
     internal class SettingsVMDesignData : SettingsVM
     {
+        public SettingsVMDesignData()
+        {
+            ForgeInstallationFolder = @"F:\Forge\";
+            DailySnapshotsUrl = @"https://downloads.cardforge.org/dailysnapshots/";
+            CloseWhenStartingForge = true;
+        }
     }
 }

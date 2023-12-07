@@ -1,3 +1,5 @@
 bind snapshot/release and exe in VM
 Better icon
 settings
+
+release url: https://releases.cardforge.org/forge/forge-gui-desktop/

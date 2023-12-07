@@ -22,6 +22,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <!-- Forge installation folder" -->
             <Button Grid.Row="0"
@@ -34,7 +35,7 @@
             </Button>
             <TextBox Grid.Row="0"
                      Grid.Column="1"
-                     Margin="5, 8"
+                     Margin="5,8"
                      materialDesign:HintAssist.Hint="Forge installation folder"
                      FontSize="18"
                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
@@ -47,6 +48,15 @@
                      FontSize="16"
                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                      Text="{Binding DailySnapshotsUrl}" />
+            <!-- Automatically close when starting forge -->
+            <ToggleButton Grid.Row="2"
+                          Grid.Column="0"
+                          Margin="5,2"
+                          IsChecked="{Binding CloseWhenStartingForge}"/>
+            <TextBlock Grid.Row="2"
+                       Grid.Column="1"
+                       Margin="5,2"
+                       Text="Close Launcher when starting Forge" />
         </Grid>
         <StackPanel Grid.Row="1"
                     Margin="5, 8"
