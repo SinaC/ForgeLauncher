@@ -10,7 +10,7 @@ namespace ForgeLauncher.WPF.Services;
 [Export(typeof(ISettingsService)), Shared]
 public class SettingsService : ISettingsService
 {
-    private const string SettingFileName = "Forge Launcher.WPF.config";
+    private const string SettingFileName = "Forge.Launcher.WPF.config";
     private const string DefaultDailySnapshotUrl = "https://downloads.cardforge.org/dailysnapshots/";
 
     private const string ForgeInstallationFolderKey = "ForgeInstallationFolder";

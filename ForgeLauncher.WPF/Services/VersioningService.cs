@@ -13,7 +13,7 @@ namespace ForgeLauncher.WPF.Services;
 [Export(typeof(IVersioningService)), Shared]
 public class VersioningService : IVersioningService
 {
-    private const string LastVersionFile = "ForgeLauncher.WPF.LastVersion.txt";
+    private const string LastVersionFile = "Forge.Launcher.WPF.LastVersion.txt";
 
     private ISettingsService SettingsService { get; }
     private IDownloadService DownloadService { get; }
