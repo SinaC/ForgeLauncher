@@ -1,0 +1,73 @@
+﻿<UserControl x:Class="ForgeLauncher.WPF.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:viewModels="clr-namespace:ForgeLauncher.WPF"
+             mc:Ignorable="d"
+             d:Background="White"
+             d:DataContext="{d:DesignInstance viewModels:SettingsVMDesignData, IsDesignTimeCreatable=True}">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <!-- Forge installation folder" -->
+            <Button Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="5,2"
+                    VerticalAlignment="Bottom"
+                    Style="{StaticResource MaterialDesignIconForegroundButton}"
+                    Command="{Binding SelectFolderCommand}">
+                <materialDesign:PackIcon Kind="FolderOpen" />
+            </Button>
+            <TextBox Grid.Row="0"
+                     Grid.Column="1"
+                     Margin="5, 8"
+                     materialDesign:HintAssist.Hint="Forge installation folder"
+                     FontSize="18"
+                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                     Text="{Binding ForgeInstallationFolder}" />
+            <!-- Snapshot download url -->
+            <TextBox Grid.Row="1"
+                     Grid.Column="1"
+                     Margin="5,8"
+                     materialDesign:HintAssist.Hint="Daily snapshot URL"
+                     FontSize="16"
+                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                     Text="{Binding DailySnapshotsUrl}" />
+        </Grid>
+        <StackPanel Grid.Row="1"
+                    Margin="5, 8"
+                    Orientation="Horizontal">
+            <Button Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                    IsDefault="True"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="Accept">
+                <Button.CommandParameter>
+                    <system:Boolean>True</system:Boolean>
+                </Button.CommandParameter>
+            </Button>
+            <Button Margin="5"
+                    Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                    IsCancel="True"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Content="Cancel">
+                <Button.CommandParameter>
+                    <system:Boolean>False</system:Boolean>
+                </Button.CommandParameter>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>
