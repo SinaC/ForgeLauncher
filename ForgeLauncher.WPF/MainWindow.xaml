@@ -9,7 +9,7 @@
         d:DataContext="{d:DesignInstance viewModels:MainVMDesignData, IsDesignTimeCreatable=True}"
         Title="Forge Launcher"
         Height="320"
-        Width="640"
+        Width="580"
         WindowStartupLocation="CenterScreen">
     <!-- TODO icon -->
     <materialDesign:DialogHost>
