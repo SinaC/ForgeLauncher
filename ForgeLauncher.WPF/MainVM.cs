@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using ForgeLauncher.WPF.Attributes;
 using ForgeLauncher.WPF.Services;
+using MaterialDesignThemes.Wpf;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -241,6 +241,31 @@ public class MainVM : ObservableObject
         catch (Exception ex)
         {
             LogError("Error while launching forge");
+        }
+    }
+
+    // Settings
+    private ICommand? _displaySettingsEditorCommand;
+    public ICommand DisplaySettingsEditorCommand => _displaySettingsEditorCommand ??= new AsyncRelayCommand(DisplaySettingsEditorAsync);
+
+    private async Task DisplaySettingsEditorAsync()
+    {
+        var settingsVM = new SettingsVM
+        {
+            ForgeInstallationFolder = SettingsService.ForgeInstallationFolder,
+            DailySnapshotsUrl = SettingsService.DailySnapshotsUrl,
+        };
+        var view = new SettingsView
+        {
+            DataContext = settingsVM
+        };
+
+        var result = await DialogHost.Show(view);
+        // save if accept
+        if (result is bool accept && accept)
+        {
+            SettingsService.ForgeInstallationFolder = settingsVM.ForgeInstallationFolder;
+            SettingsService.DailySnapshotsUrl = settingsVM.DailySnapshotsUrl;
         }
     }
 

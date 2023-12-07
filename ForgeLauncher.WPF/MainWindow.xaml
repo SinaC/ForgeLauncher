@@ -4,104 +4,118 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:local="clr-namespace:ForgeLauncher.WPF"
+        xmlns:viewModels="clr-namespace:ForgeLauncher.WPF"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance local:MainVMDesignData, IsDesignTimeCreatable=True}"
+        d:DataContext="{d:DesignInstance viewModels:MainVMDesignData, IsDesignTimeCreatable=True}"
         Title="Forge Launcher"
-        Height="240"
-        Width="480"
+        Height="320"
+        Width="640"
         WindowStartupLocation="CenterScreen">
     <!-- TODO icon -->
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <!-- Options -->
-        <materialDesign:ColorZone Grid.Row="0"
-                                  Margin="2"
-                                  IsEnabled="{Binding IsInProgress, Converter={StaticResource InvertBooleanConverter}}"
-                                  Foreground="White"
-                                  Mode="PrimaryMid">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <!-- TODO: selected item -->
-                <ComboBox Grid.Column="0"
-                          Margin="5,2"
-                          materialDesign:ColorZoneAssist.Mode="Standard"
-                          materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource MaterialDesignPaper}"
-                          BorderBrush="{DynamicResource MaterialDesignPaper}"
-                          BorderThickness="0"
-                          SelectedIndex="0">
-                    <ComboBoxItem>snapshot</ComboBoxItem>
-                    <ComboBoxItem>release</ComboBoxItem>
-                </ComboBox>
-                <!-- Update -->
-                <Button Grid.Column="1"
-                        Margin="5,2"
-                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                        Command="{Binding UpdateCommand}"
-                        ToolTip="Update to latest version">
-                    <materialDesign:PackIcon Kind="Download" />
-                </Button>
-                <!-- TODO: exe to start -->
-                <ComboBox Grid.Column="3"
-                          Margin="5,2"
-                          materialDesign:ColorZoneAssist.Mode="Standard"
-                          materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource MaterialDesignPaper}"
-                          BorderBrush="{DynamicResource MaterialDesignPaper}"
-                          BorderThickness="0"
-                          SelectedIndex="0">
-                    <ComboBoxItem>forge.exe</ComboBoxItem>
-                    <ComboBoxItem>forge-java8.exe</ComboBoxItem>
-                </ComboBox>
-                <!-- Start Forge -->
-                <Button Grid.Column="4"
-                        Margin="5,2"
-                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                        Command="{Binding LaunchCommand}"
-                        ToolTip="Launch Forge">
-                    <materialDesign:PackIcon Kind="Launch" />
-                </Button>
-            </Grid>
-        </materialDesign:ColorZone>
-        <!-- Settings -->
-        <!-- TODO -->
-        <!-- Logs -->
-        <materialDesign:ColorZone Grid.Row="2"
-                                  Margin="2"
-                                  VerticalAlignment="Stretch"
-                                  Mode="Light">
-            <ItemsControl Margin="5,2"
-                          ItemsSource="{Binding Logs}">
-                <ItemsControl.Template>
-                    <ControlTemplate>
-                        <ScrollViewer CanContentScroll="True">
-                            <ItemsPresenter />
-                        </ScrollViewer>
-                    </ControlTemplate>
-                </ItemsControl.Template>
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel IsItemsHost="True" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
-        </materialDesign:ColorZone>
-        <!-- Progress -->
-        <ProgressBar Grid.Row="3"
-                     Height="10"
-                     Margin="2,1"
-                     Visibility="{Binding IsInProgress, Converter={StaticResource BooleanToVisibilityConverter}}"
-                     IsIndeterminate="{Binding IsUnpacking}"
-                     Value="{Binding DownloadProgress, Mode=OneWay}" />
-    </Grid>
+    <materialDesign:DialogHost>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <materialDesign:ColorZone Grid.Row="0"
+                                      Margin="2"
+                                      IsEnabled="{Binding IsInProgress, Converter={StaticResource InvertBooleanConverter}}"
+                                      Foreground="White"
+                                      Mode="PrimaryMid">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <!-- TODO: selected item -->
+                    <ComboBox Grid.Column="0"
+                              Margin="5,2"
+                              materialDesign:ColorZoneAssist.Mode="Standard"
+                              materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource MaterialDesignPaper}"
+                              BorderBrush="{DynamicResource MaterialDesignPaper}"
+                              BorderThickness="0"
+                              SelectedIndex="0"
+                              IsEnabled="False">
+                        <ComboBoxItem>snapshot</ComboBoxItem>
+                        <ComboBoxItem>release</ComboBoxItem>
+                    </ComboBox>
+                    <!-- Update -->
+                    <Button Grid.Column="1"
+                            Margin="5,2"
+                            Style="{StaticResource MaterialDesignIconForegroundButton}"
+                            Command="{Binding UpdateCommand}"
+                            ToolTip="Update to latest version">
+                        <materialDesign:PackIcon Kind="Download" />
+                    </Button>
+                    <!-- Settings -->
+                    <Button Grid.Column="2"
+                            Margin="5,2"
+                            Style="{StaticResource MaterialDesignIconForegroundButton}"
+                            Command="{Binding DisplaySettingsEditorCommand}"
+                            ToolTip="Settings">
+                        <materialDesign:PackIcon Kind="Cog" />
+                    </Button>
+                    <!-- filler -->
+                    <!-- TODO: exe to start -->
+                    <ComboBox Grid.Column="4"
+                              Margin="5,2"
+                              materialDesign:ColorZoneAssist.Mode="Standard"
+                              materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource MaterialDesignPaper}"
+                              BorderBrush="{DynamicResource MaterialDesignPaper}"
+                              BorderThickness="0"
+                              SelectedIndex="0"
+                              IsEnabled="False">
+                        <ComboBoxItem>forge.exe</ComboBoxItem>
+                        <ComboBoxItem>forge-java8.exe</ComboBoxItem>
+                    </ComboBox>
+                    <!-- Start Forge -->
+                    <Button Grid.Column="5"
+                            Margin="5,2"
+                            Style="{StaticResource MaterialDesignIconForegroundButton}"
+                            Command="{Binding LaunchCommand}"
+                            ToolTip="Launch Forge">
+                        <materialDesign:PackIcon Kind="Launch" />
+                    </Button>
+                </Grid>
+            </materialDesign:ColorZone>
+            <!-- Settings -->
+            <!-- TODO -->
+            <!-- Logs -->
+            <materialDesign:ColorZone Grid.Row="2"
+                                      Margin="2"
+                                      VerticalAlignment="Stretch"
+                                      Mode="Light">
+                <ItemsControl Margin="5,2"
+                              ItemsSource="{Binding Logs}">
+                    <ItemsControl.Template>
+                        <ControlTemplate>
+                            <ScrollViewer CanContentScroll="True">
+                                <ItemsPresenter />
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel IsItemsHost="True" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </materialDesign:ColorZone>
+            <!-- Progress -->
+            <ProgressBar Grid.Row="3"
+                         Height="10"
+                         Margin="2,1"
+                         Visibility="{Binding IsInProgress, Converter={StaticResource BooleanToVisibilityConverter}}"
+                         IsIndeterminate="{Binding IsUnpacking}"
+                         Value="{Binding DownloadProgress, Mode=OneWay}" />
+        </Grid>
+    </materialDesign:DialogHost>
 </Window>
