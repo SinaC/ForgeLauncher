@@ -10,10 +10,12 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace ForgeLauncher.WPF;
 
@@ -72,6 +74,7 @@ public class MainVM : ObservableObject
         }
         catch (Exception ex)
         {
+            LogException(ex);
             LogError("Error while checking version!");
         }
     }
@@ -167,6 +170,7 @@ public class MainVM : ObservableObject
         }
         catch (Exception ex)
         {
+            LogException(ex);
             LogError("Download failed!");
         }
         finally
@@ -197,6 +201,7 @@ public class MainVM : ObservableObject
         }
         catch (Exception ex)
         {
+            LogException(ex);
             LogError("Unpack failed!");
         }
         finally
@@ -238,10 +243,11 @@ public class MainVM : ObservableObject
             };
             var process = Process.Start(processStartInfo);
             if (SettingsService.CloseWhenStartingForge)
-                Application.Current.Shutdown();
+                Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
         catch (Exception ex)
         {
+            LogException(ex);
             LogError("Error while launching forge");
         }
     }
@@ -316,7 +322,13 @@ public class MainVM : ObservableObject
     {
         if (!DesignMode.IsInDesignModeStatic)
             Logger.Error(logEntry);
-        Application.Current.Dispatcher.BeginInvoke(() => Logs.Add(logEntry));
+        Application.Current.Dispatcher.BeginInvoke(() => Logs.Insert(0, logEntry));
+    }
+
+    public void LogException(Exception ex)
+    {
+        if (!DesignMode.IsInDesignModeStatic)
+            Logger.Error(ex.ToString());
     }
 }
 
