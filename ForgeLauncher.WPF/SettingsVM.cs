@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ForgeLauncher.WPF.Services;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace ForgeLauncher.WPF
@@ -39,6 +40,18 @@ namespace ForgeLauncher.WPF
         {
             get => _forgeInstallationFolder;
             set => SetProperty(ref _forgeInstallationFolder, value);
+        }
+
+        private ICommand _goToDailySnapshotUrlCommand;
+        public ICommand GoToDailySnapshotUrlCommand => _goToDailySnapshotUrlCommand ??= new RelayCommand(GoToDailySnapshotUrl);
+
+        private void GoToDailySnapshotUrl()
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = DailySnapshotsUrl,
+                UseShellExecute = true
+            });
         }
 
         private string _dailySnapshotsUrl = null!;
