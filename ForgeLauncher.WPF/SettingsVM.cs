@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using ForgeLauncher.WPF.Services;
 using System.Diagnostics;
+using System.IO;
 using System.Windows.Input;
 
 namespace ForgeLauncher.WPF
@@ -15,14 +16,16 @@ namespace ForgeLauncher.WPF
         public SettingsVM(ISettingsService settingsService)
         {
             ForgeInstallationFolder = settingsService.ForgeInstallationFolder;
+            ForgeExecutable = settingsService.ForgeExecutable;
             DailySnapshotsUrl = settingsService.DailySnapshotsUrl;
             CloseWhenStartingForge = settingsService.CloseWhenStartingForge;
         }
 
-        private ICommand _selectFolderCommand = null!;
-        public ICommand SelectFolderCommand => _selectFolderCommand ??= new RelayCommand(SelectFolder);
+        //
+        private ICommand _selectForgeInstallationFolderCommand = null!;
+        public ICommand SelectForgeInstallationFolderCommand => _selectForgeInstallationFolderCommand ??= new RelayCommand(SelectForgeInstallationFolder);
 
-        private void SelectFolder()
+        private void SelectForgeInstallationFolder()
         {
             using (var dialog = new System.Windows.Forms.FolderBrowserDialog
             {
@@ -42,7 +45,37 @@ namespace ForgeLauncher.WPF
             set => SetProperty(ref _forgeInstallationFolder, value);
         }
 
-        private ICommand _goToDailySnapshotUrlCommand;
+        //
+        private ICommand _selectForgeExecutableCommand = null!;
+        public ICommand SelectForgeExecutableCommand => _selectForgeExecutableCommand ??= new RelayCommand(SelectForgeExecutable);
+
+        private void SelectForgeExecutable()
+        {
+            using (var dialog = new System.Windows.Forms.OpenFileDialog
+            {
+                InitialDirectory = ForgeInstallationFolder,
+                FileName = ForgeExecutable,
+                DefaultExt = "exe",
+                Filter = "exe files (*.exe)|*.exe",
+                CheckFileExists = true,
+                CheckPathExists = true,
+            })
+            {
+                var result = dialog.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK)
+                    ForgeExecutable = Path.GetFileName(dialog.FileName);
+            }
+        }
+
+        private string _forgeExecutable = null!;
+        public string ForgeExecutable
+        {
+            get => _forgeExecutable;
+            set => SetProperty(ref _forgeExecutable, value);
+        }
+
+        //
+        private ICommand _goToDailySnapshotUrlCommand = null!;
         public ICommand GoToDailySnapshotUrlCommand => _goToDailySnapshotUrlCommand ??= new RelayCommand(GoToDailySnapshotUrl);
 
         private void GoToDailySnapshotUrl()
@@ -71,9 +104,10 @@ namespace ForgeLauncher.WPF
 
     internal class SettingsVMDesignData : SettingsVM
     {
-        public SettingsVMDesignData()
+        public SettingsVMDesignData() : base()
         {
             ForgeInstallationFolder = @"F:\Forge\";
+            ForgeExecutable = "forge.exe";
             DailySnapshotsUrl = @"https://downloads.cardforge.org/dailysnapshots/";
             CloseWhenStartingForge = true;
         }

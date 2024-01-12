@@ -14,10 +14,12 @@ public class SettingsService : ISettingsService
 {
     private const string SettingFileName = "Forge.Launcher.WPF.config";
     private const string DefaultDailySnapshotUrl = "https://downloads.cardforge.org/dailysnapshots/";
+    private const string DefaultForgeExecutable = "forge.exe";
 
     private const string ForgeInstallationFolderKey = "ForgeInstallationFolder";
     private const string DailySnapshotsUrlKey = "DailySnapshotsUrl";
     private const string CloseWhenStartingForgeKey = "CloseWhenStartingForge";
+    private const string ForgeExecutableKey = "ForgeExecutable";
 
     private readonly Lazy<IDictionary<string, string>> _settings = new(() => InitializeSettings());
 
@@ -33,6 +35,12 @@ public class SettingsService : ISettingsService
     {
         get => Get(ForgeInstallationFolderKey, AppDomain.CurrentDomain.BaseDirectory);
         set => Set(ForgeInstallationFolderKey, value);
+    }
+
+    public string ForgeExecutable
+    {
+        get => Get(ForgeExecutableKey, DefaultForgeExecutable);
+        set => Set(ForgeExecutableKey, value);
     }
 
     public string DailySnapshotsUrl

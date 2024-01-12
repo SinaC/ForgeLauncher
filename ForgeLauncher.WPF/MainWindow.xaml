@@ -16,8 +16,6 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
@@ -32,7 +30,6 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <!-- TODO: selected item -->
@@ -64,20 +61,8 @@
                         <materialDesign:PackIcon Kind="Cog" />
                     </Button>
                     <!-- filler -->
-                    <!-- TODO: exe to start -->
-                    <ComboBox Grid.Column="4"
-                              Margin="5,2"
-                              materialDesign:ColorZoneAssist.Mode="Standard"
-                              materialDesign:TextFieldAssist.UnderlineBrush="{DynamicResource MaterialDesignPaper}"
-                              BorderBrush="{DynamicResource MaterialDesignPaper}"
-                              BorderThickness="0"
-                              SelectedIndex="0"
-                              IsEnabled="False">
-                        <ComboBoxItem>forge.exe</ComboBoxItem>
-                        <ComboBoxItem>forge-java8.exe</ComboBoxItem>
-                    </ComboBox>
                     <!-- Start Forge -->
-                    <Button Grid.Column="5"
+                    <Button Grid.Column="4"
                             Margin="5,2"
                             Style="{StaticResource MaterialDesignIconForegroundButton}"
                             Command="{Binding LaunchCommand}"
@@ -86,15 +71,12 @@
                     </Button>
                 </Grid>
             </materialDesign:ColorZone>
-            <!-- Settings -->
-            <!-- TODO -->
             <!-- Logs -->
-            <materialDesign:ColorZone Grid.Row="2"
+            <materialDesign:ColorZone Grid.Row="1"
                                       Margin="2"
                                       VerticalAlignment="Stretch"
                                       Mode="Light">
-                <ItemsControl Margin="5,2"
-                              ItemsSource="{Binding Logs}">
+                <ItemsControl ItemsSource="{Binding Logs}">
                     <ItemsControl.Template>
                         <ControlTemplate>
                             <ScrollViewer CanContentScroll="True">
@@ -110,9 +92,9 @@
                 </ItemsControl>
             </materialDesign:ColorZone>
             <!-- Progress -->
-            <ProgressBar Grid.Row="3"
+            <ProgressBar Grid.Row="2"
                          Height="10"
-                         Margin="2,1"
+                         Margin="2"
                          Visibility="{Binding IsInProgress, Converter={StaticResource BooleanToVisibilityConverter}}"
                          IsIndeterminate="{Binding IsUnpacking}"
                          Value="{Binding DownloadProgress, Mode=OneWay}" />
