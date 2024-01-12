@@ -228,7 +228,7 @@ public class MainVM : ObservableObject
             Log("Launching forge...");
             var forgePath = SettingsService.ForgeInstallationFolder;
             // TODO: use exe from combo
-            var exePath = Path.Combine(forgePath, "forge.exe");
+            var exePath = Path.Combine(forgePath, SettingsService.ForgeExecutable);
             if (!File.Exists(exePath))
             {
                 Log("Forge executable not found!");
@@ -271,6 +271,7 @@ public class MainVM : ObservableObject
             SettingsService.ForgeInstallationFolder = settingsVM.ForgeInstallationFolder;
             SettingsService.DailySnapshotsUrl = settingsVM.DailySnapshotsUrl;
             SettingsService.CloseWhenStartingForge = settingsVM.CloseWhenStartingForge;
+            SettingsService.ForgeExecutable = settingsVM.ForgeExecutable;
             await SettingsService.SaveAsync(CancellationToken.None);
         }
     }
