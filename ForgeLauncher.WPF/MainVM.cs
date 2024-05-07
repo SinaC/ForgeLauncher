@@ -95,6 +95,13 @@ public class MainVM : ObservableObject
                     .ContinueWith(_ => Log("Installation complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Launch(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
             }
+            else
+            {
+                Log("Forge not updated.");
+                messageBoxResult = MessageBox.Show("Do you want to start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
+                if (messageBoxResult == MessageBoxResult.Yes)
+                    Launch();
+            }
         }
         else if (VersioningService.IsVersionOutdated(localVersion, serverVersion))
         {
