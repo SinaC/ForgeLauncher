@@ -31,6 +31,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <!-- TODO: selected item -->
                     <ComboBox Grid.Column="0"
@@ -61,8 +62,15 @@
                         <materialDesign:PackIcon Kind="Cog" />
                     </Button>
                     <!-- filler -->
-                    <!-- Start Forge -->
                     <Button Grid.Column="4"
+                            Margin="5,2"
+                            Style="{StaticResource MaterialDesignIconForegroundButton}"
+                            Command="{Binding CheckForUpdatesCommand}"
+                            ToolTip="Check for updates">
+                        <materialDesign:PackIcon Kind="CogRefresh" />
+                    </Button>
+                    <!-- Start Forge -->
+                    <Button Grid.Column="5"
                             Margin="5,2"
                             Style="{StaticResource MaterialDesignIconForegroundButton}"
                             Command="{Binding LaunchCommand}"
