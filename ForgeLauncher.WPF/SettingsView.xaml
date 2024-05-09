@@ -24,6 +24,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <!-- Forge installation folder -->
             <Button Grid.Row="0"
@@ -73,12 +74,28 @@
                      FontSize="16"
                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                      Text="{Binding DailySnapshotsUrl}" />
+            <!-- Release url -->
+            <Button Grid.Row="3"
+                    Grid.Column="0"
+                    Margin="5,2"
+                    VerticalAlignment="Bottom"
+                    Style="{StaticResource MaterialDesignIconForegroundButton}"
+                    Command="{Binding GoToReleaseUrlCommand}">
+                <materialDesign:PackIcon Kind="LinkVariant" />
+            </Button>
+            <TextBox Grid.Row="3"
+                     Grid.Column="1"
+                     Margin="5,8"
+                     materialDesign:HintAssist.Hint="Release URL"
+                     FontSize="16"
+                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                     Text="{Binding ReleaseUrl}" />
             <!-- Automatically close when starting forge -->
-            <ToggleButton Grid.Row="3"
+            <ToggleButton Grid.Row="4"
                           Grid.Column="0"
                           Margin="5,2"
                           IsChecked="{Binding CloseWhenStartingForge}"/>
-            <TextBlock Grid.Row="3"
+            <TextBlock Grid.Row="4"
                        Grid.Column="1"
                        Margin="5,2"
                        Text="Close Launcher when starting Forge" />

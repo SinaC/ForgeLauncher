@@ -18,6 +18,7 @@ namespace ForgeLauncher.WPF
             ForgeInstallationFolder = settingsService.ForgeInstallationFolder;
             ForgeExecutable = settingsService.ForgeExecutable;
             DailySnapshotsUrl = settingsService.DailySnapshotsUrl;
+            ReleaseUrl = settingsService.ReleaseUrl;
             CloseWhenStartingForge = settingsService.CloseWhenStartingForge;
         }
 
@@ -94,6 +95,27 @@ namespace ForgeLauncher.WPF
             set => SetProperty(ref _dailySnapshotsUrl, value);
         }
 
+        //
+        private ICommand _goToReleaseUrlCommand = null!;
+        public ICommand GoToReleaseUrlCommand => _goToReleaseUrlCommand ??= new RelayCommand(GoToReleaseUrl);
+
+        private void GoToReleaseUrl()
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = ReleaseUrl,
+                UseShellExecute = true
+            });
+        }
+
+        private string _releaseUrl = null!;
+        public string ReleaseUrl
+        {
+            get => _releaseUrl;
+            set => SetProperty(ref _releaseUrl, value);
+        }
+
+        //
         private bool _closeWhenStartingForge;
         public bool CloseWhenStartingForge
         {
@@ -109,6 +131,7 @@ namespace ForgeLauncher.WPF
             ForgeInstallationFolder = @"F:\Forge\";
             ForgeExecutable = "forge.exe";
             DailySnapshotsUrl = @"https://downloads.cardforge.org/dailysnapshots/";
+            ReleaseUrl = @"https://github.com/SinaC/ForgeLauncher/releases/";
             CloseWhenStartingForge = true;
         }
     }

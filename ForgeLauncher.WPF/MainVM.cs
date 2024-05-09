@@ -434,6 +434,7 @@ public class MainVM : ObservableObject
         {
             SettingsService.ForgeInstallationFolder = settingsVM.ForgeInstallationFolder;
             SettingsService.DailySnapshotsUrl = settingsVM.DailySnapshotsUrl;
+            SettingsService.ReleaseUrl = settingsVM.ReleaseUrl;
             SettingsService.CloseWhenStartingForge = settingsVM.CloseWhenStartingForge;
             SettingsService.ForgeExecutable = settingsVM.ForgeExecutable;
             await SettingsService.SaveAsync(CancellationToken.None);
