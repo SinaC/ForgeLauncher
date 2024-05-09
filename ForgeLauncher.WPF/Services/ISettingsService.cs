@@ -5,10 +5,11 @@ namespace ForgeLauncher.WPF.Services;
 
 public interface ISettingsService
 {
-    public string ForgeInstallationFolder { get; set; }
-    public string ForgeExecutable { get; set; }
-    public string DailySnapshotsUrl { get; set; }
-    public bool CloseWhenStartingForge { get; set; }
+    string ForgeInstallationFolder { get; set; }
+    string ForgeExecutable { get; set; }
+    string DailySnapshotsUrl { get; set; }
+    bool CloseWhenStartingForge { get; set; }
+    string ReleaseUrl { get; set; }
 
     Task SaveAsync(CancellationToken cancellationToken);
 }

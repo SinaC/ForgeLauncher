@@ -1,5 +1,6 @@
 ﻿using ForgeLauncher.WPF.Attributes;
 using Serilog;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,11 +16,13 @@ public class SettingsService : ISettingsService
     private const string SettingFileName = "Forge.Launcher.WPF.config";
     private const string DefaultDailySnapshotUrl = "https://downloads.cardforge.org/dailysnapshots/";
     private const string DefaultForgeExecutable = "forge.exe";
+    private const string DefaultReleaseUrl = "https://github.com/SinaC/ForgeLauncher/releases/";
 
     private const string ForgeInstallationFolderKey = "ForgeInstallationFolder";
     private const string DailySnapshotsUrlKey = "DailySnapshotsUrl";
     private const string CloseWhenStartingForgeKey = "CloseWhenStartingForge";
     private const string ForgeExecutableKey = "ForgeExecutable";
+    private const string ReleaseUrlKey = "ReleaseUrl";
 
     private readonly Lazy<IDictionary<string, string>> _settings = new(() => InitializeSettings());
 
@@ -55,6 +58,12 @@ public class SettingsService : ISettingsService
         set => Set(CloseWhenStartingForgeKey, value);
     }
 
+    public string ReleaseUrl
+    {
+        get => Get(ReleaseUrlKey, DefaultReleaseUrl);
+        set => Set(ReleaseUrlKey, value);
+    }
+
     public async Task SaveAsync(CancellationToken cancellationToken)
     {
         try
@@ -86,7 +95,9 @@ public class SettingsService : ISettingsService
         {
             { ForgeInstallationFolderKey, AppDomain.CurrentDomain.BaseDirectory },
             { DailySnapshotsUrlKey, DefaultDailySnapshotUrl },
-            { CloseWhenStartingForgeKey, "true" }
+            { CloseWhenStartingForgeKey, "true" },
+            { ForgeExecutableKey, DefaultForgeExecutable },
+            { ReleaseUrlKey, DefaultReleaseUrl }
         };
     }
 

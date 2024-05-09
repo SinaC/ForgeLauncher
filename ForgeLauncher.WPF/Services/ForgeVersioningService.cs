@@ -10,15 +10,15 @@ namespace ForgeLauncher.WPF.Services;
 // TODO:
 // snapshot and release
 // better version compare
-[Export(typeof(IVersioningService)), Shared]
-public class VersioningService : IVersioningService
+[Export(typeof(IForgeVersioningService)), Shared]
+public class ForgeVersioningService : IForgeVersioningService
 {
     private const string LastVersionFile = "Forge.Launcher.WPF.LastVersion.txt";
 
     private ISettingsService SettingsService { get; }
     private IDownloadService DownloadService { get; }
 
-    public VersioningService(ISettingsService settingsService, IDownloadService downloadService)
+    public ForgeVersioningService(ISettingsService settingsService, IDownloadService downloadService)
     {
         SettingsService = settingsService;
         DownloadService = downloadService;
