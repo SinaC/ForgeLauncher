@@ -10,7 +10,6 @@ namespace ForgeLauncher.WPF.Services;
 
 // TODO:
 // snapshot and release
-// better version compare
 [Export(typeof(IForgeVersioningService)), Shared]
 public class ForgeVersioningService : IForgeVersioningService
 {
@@ -40,11 +39,6 @@ public class ForgeVersioningService : IForgeVersioningService
         var guiDesktopSnapshotJarVersions = Directory.EnumerateFiles(forgePath, "forge-gui-desktop-*-SNAPSHOT-jar-with-dependencies.jar").Select(x => ExtractVersionFromJar(x)).ToList();
         var localVersion = guiDesktopSnapshotJarVersions.OrderByDescending(x => x).FirstOrDefault();
         return localVersion!;
-    }
-
-    public async Task SaveLatestVersionAsync(string version, CancellationToken cancellationToken)
-    {
-        await File.WriteAllLinesAsync(LastVersionFile, new[] { version }, cancellationToken);
     }
 
     public async Task<(string serverVersion, string serverVersionFilename)> GetServerVersionAsync(CancellationToken cancellationToken)
@@ -80,6 +74,11 @@ public class ForgeVersioningService : IForgeVersioningService
         if (localVersion.Contains("SNAPSHOT"))
             return VersionComparer.Compare(localVersion, serverVersion) < 0;
         return !serverVersion.Contains(localVersion);
+    }
+
+    public async Task SaveLatestVersionAsync(string version, CancellationToken cancellationToken)
+    {
+        await File.WriteAllLinesAsync(LastVersionFile, new[] { version }, cancellationToken);
     }
 
     private static string ExtractVersionFromJar(string filename)

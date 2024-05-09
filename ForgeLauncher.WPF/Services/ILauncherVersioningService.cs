@@ -1,6 +1,5 @@
-﻿namespace ForgeLauncher.WPF.Services
+﻿namespace ForgeLauncher.WPF.Services;
+
+public interface ILauncherVersioningService : IVersioningService
 {
-    public interface ILauncherVersioningService : IVersioningService
-    {
-    }
 }

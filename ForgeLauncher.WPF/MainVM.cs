@@ -61,7 +61,7 @@ public class MainVM : ObservableObject
     {
         try
         {
-            File.Delete("Forge.Launcher.WPF.exe.temp");
+            File.Delete("Forge.Launcher.WPF.exe.bak");
             Log("Checking local Launcher version...");
             var localVersion = await LauncherVersioningService.GetLocalVersionAsync(cancellationToken);
             if (localVersion == null)
@@ -155,7 +155,7 @@ public class MainVM : ObservableObject
                     .ContinueWith(t => UnpackForge(t.Result), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => ForgeVersioningService.SaveLatestVersionAsync(serverVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Log("Forge installation complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
-                    .ContinueWith(_ => Launch(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+                    .ContinueWith(_ => LaunchForge(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
             }
         }
         else if (ForgeVersioningService.IsVersionOutdated(localVersion, serverVersion))
@@ -169,14 +169,14 @@ public class MainVM : ObservableObject
                     .ContinueWith(t => UnpackForge(t.Result), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => ForgeVersioningService.SaveLatestVersionAsync(serverVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Log("Forge update complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
-                    .ContinueWith(_ => Launch(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+                    .ContinueWith(_ => LaunchForge(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
             }
             else
             {
                 Log("Forge not updated.");
                 messageBoxResult = MessageBox.Show("Do you want to start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
                 if (messageBoxResult == MessageBoxResult.Yes)
-                    Launch();
+                    LaunchForge();
             }
         }
         else
@@ -184,34 +184,13 @@ public class MainVM : ObservableObject
             Log("Forge is up-to-date.");
             var messageBoxResult = MessageBox.Show("Forge is up-to-date, do you want to start Forge ?", "Forge Launcher", MessageBoxButton.YesNo);
             if (messageBoxResult == MessageBoxResult.Yes)
-                Launch();
+                LaunchForge();
         }
     }
 
     public bool IsInProgress => IsDownloading || IsUnpacking;
 
-    // Update
-
-    private ICommand? _updateCommand;
-    public ICommand UpdateCommand => _updateCommand ??= new AsyncRelayCommand(UpdateAsync);
-
-    private async Task UpdateAsync(CancellationToken cancellationToken)
-    {
-        if (ForgeServerVersionFilename == null)
-        {
-            LogError("Cannot update. Server issue!");
-            MessageBox.Show("Cannot update. Server issue!");
-            return;
-        }
-        var messageBoxResult = MessageBox.Show("Are you sure you want to download latest Forge version ?", "Forge Launcher", MessageBoxButton.YesNo);
-        if (messageBoxResult == MessageBoxResult.Yes)
-        {
-            await DownloadForgeAsync(cancellationToken)
-                .ContinueWith(t => UnpackForge(t.Result), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
-                .ContinueWith(_ => ForgeVersioningService.SaveLatestVersionAsync(ForgeServerVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
-        }
-    }
-
+    //
     private bool _isDownloading;
     public bool IsDownloading
     {
@@ -226,6 +205,13 @@ public class MainVM : ObservableObject
         protected set => SetProperty(ref _downloadProgress, value);
     }
 
+    private void HandleDownloadProgressChanged(long? totalBytes, long totalBytesRead)
+    {
+        DownloadProgress = totalBytes.HasValue
+            ? (double)totalBytesRead / totalBytes.Value * 100.0
+            : 0;
+    }
+
     private async Task<string> DownloadLauncherAsync(string serverVersion, string serverVersionFilename, CancellationToken cancellationToken)
     {
         try
@@ -236,6 +222,7 @@ public class MainVM : ObservableObject
             var filename = $"{serverVersion}_{serverVersionFilename}";
             var destinationFilePath = Path.Combine(Path.GetTempPath(), filename);
             var downloadUrl = $"https://github.com/SinaC/ForgeLauncher/releases/download/{serverVersion}/{serverVersionFilename}";
+            Logger.Information($"Downloading {downloadUrl} to {destinationFilePath}");
             await DownloadService.DownloadFileAsync(downloadUrl, destinationFilePath, HandleDownloadProgressChanged, cancellationToken);
 
             Log("Forge Launcher update downloaded.");
@@ -262,10 +249,11 @@ public class MainVM : ObservableObject
             Log($"Downloading Forge update...");
 
             IsDownloading = true;
+
             var dailySnapshotsUrl = SettingsService.DailySnapshotsUrl;
             var downloadUrl = dailySnapshotsUrl + ForgeServerVersionFilename;
             var destinationFilePath = Path.Combine(Path.GetTempPath(), ForgeServerVersionFilename);
-
+            Logger.Information($"Downloading {downloadUrl} to {destinationFilePath}");
             await DownloadService.DownloadFileAsync(downloadUrl, destinationFilePath, HandleDownloadProgressChanged, cancellationToken);
 
             Log("Forge update downloaded.");
@@ -297,7 +285,7 @@ public class MainVM : ObservableObject
     {
         if (archiveFilePath == null)
         {
-            Log("Failed to install Forge Launcher");
+            Log("Failed to install Forge Launcher!");
             return;
         }
 
@@ -306,16 +294,27 @@ public class MainVM : ObservableObject
             Log("Installing Forge Launcher update...");
 
             IsUnpacking = true;
-            var destinationFilePath = Path.GetTempPath();
-            Logger.Information($"Extracting {archiveFilePath} to {destinationFilePath}");
-            UnpackService.ExtractTarBz2(archiveFilePath, destinationFilePath);
-            
-            Logger.Information($"Rename Forge.Launcher.WPF.exe to Forge.Launcher.WPF.exe.temp");
-            File.Move("Forge.Launcher.WPF.exe", "Forge.Launcher.WPF.exe.temp", true);
 
-            var copyDestinationFilePath = Path.Combine(destinationFilePath, "Forge.Launcher.WPF.exe");
-            Logger.Information($"Copy {copyDestinationFilePath} to Forge.Launcher.WPF.exe");
-            File.Copy(copyDestinationFilePath, "Forge.Launcher.WPF.exe");
+            var destinationPath = Path.GetTempPath();
+            Logger.Information($"Extract {archiveFilePath} to {destinationPath}");
+            UnpackService.ExtractTarBz2(archiveFilePath, destinationPath);
+            
+            Logger.Information($"Rename Forge.Launcher.WPF.exe to Forge.Launcher.WPF.exe.bak");
+            File.Move("Forge.Launcher.WPF.exe", "Forge.Launcher.WPF.exe.bak", true);
+
+            try
+            {
+                var copyDestinationFilePath = Path.Combine(destinationPath, "Forge.Launcher.WPF.exe");
+                Logger.Information($"Copy {copyDestinationFilePath} to Forge.Launcher.WPF.exe");
+                File.Copy(copyDestinationFilePath, "Forge.Launcher.WPF.exe");
+            }
+            catch
+            {
+                // rollback .bak to .exe
+                Logger.Information($"Rollback Forge.Launcher.WPF.exe.bak to Forge.Launcher.WPF.exe");
+                File.Move("Forge.Launcher.WPF.exe.bak", "Forge.Launcher.WPF.exe", true);
+                throw;
+            }
 
             Logger.Information($"Delete {archiveFilePath}");
             File.Delete(archiveFilePath);
@@ -337,7 +336,7 @@ public class MainVM : ObservableObject
     {
         if (archiveFilePath == null)
         {
-            Log("Failed to unpack forge");
+            Log("Failed to unpack forge!");
             return;
         }
 
@@ -346,8 +345,12 @@ public class MainVM : ObservableObject
             Log("Unpacking Forge update...");
 
             IsUnpacking = true;
+
             var forgePath = SettingsService.ForgeInstallationFolder;
+            Logger.Information($"Extract {archiveFilePath} to {forgePath}");
             UnpackService.ExtractTarBz2(archiveFilePath, forgePath);
+
+            Logger.Information($"Delete {archiveFilePath}");
             File.Delete(archiveFilePath);
 
             Log("Forge update unpacked.");
@@ -363,25 +366,40 @@ public class MainVM : ObservableObject
         }
     }
 
-    private void HandleDownloadProgressChanged(long? totalBytes, long totalBytesRead)
+    private void RestartLauncher()
     {
-        DownloadProgress = totalBytes.HasValue
-            ? (double)totalBytesRead / totalBytes.Value * 100.0
-            : 0;
-    }
+        Log("Restarting Forge Launcher");
 
-    // Restart
-    public void RestartLauncher()
-    {
         Process.Start("Forge.Launcher.WPF.exe");
         Environment.Exit(0);
     }
 
-    // Check for updates
-    private ICommand _checkForUpdatesCommand;
-    public ICommand CheckForUpdatesCommand => _checkForUpdatesCommand ??= new AsyncRelayCommand(CheckForUpdatesAsync);
+    // Update
+    private ICommand? _updateForgeCommand = null!;
+    public ICommand UpdateForgeCommand => _updateForgeCommand ??= new AsyncRelayCommand(UpdateForgeAsync);
 
-    private async Task CheckForUpdatesAsync(CancellationToken cancellationToken)
+    private async Task UpdateForgeAsync(CancellationToken cancellationToken)
+    {
+        if (ForgeServerVersionFilename == null)
+        {
+            LogError("Cannot update. Server issue!");
+            MessageBox.Show("Cannot update. Server issue!");
+            return;
+        }
+        var messageBoxResult = MessageBox.Show("Are you sure you want to download the latest Forge version ?", "Forge Launcher", MessageBoxButton.YesNo);
+        if (messageBoxResult == MessageBoxResult.Yes)
+        {
+            await DownloadForgeAsync(cancellationToken)
+                .ContinueWith(t => UnpackForge(t.Result), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                .ContinueWith(_ => ForgeVersioningService.SaveLatestVersionAsync(ForgeServerVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+        }
+    }
+
+    // Check for updates
+    private ICommand _checkForLauncherUpdatesCommand = null!;
+    public ICommand CheckForLauncherUpdatesCommand => _checkForLauncherUpdatesCommand ??= new AsyncRelayCommand(CheckForLauncherUpdatesAsync);
+
+    private async Task CheckForLauncherUpdatesAsync(CancellationToken cancellationToken)
     {
         var localVersion = await LauncherVersioningService.GetLocalVersionAsync(cancellationToken);
         if (localVersion == null)
@@ -406,10 +424,10 @@ public class MainVM : ObservableObject
     }
 
     // Launch
-    private ICommand? _launchCommand;
-    public ICommand LaunchCommand => _launchCommand ??= new RelayCommand(Launch);
+    private ICommand? _launchForgeCommand = null!;
+    public ICommand LaunchForgeCommand => _launchForgeCommand ??= new RelayCommand(LaunchForge);
 
-    private void Launch()
+    private void LaunchForge()
     {
         try
         {
@@ -441,7 +459,7 @@ public class MainVM : ObservableObject
     }
 
     // Settings
-    private ICommand? _displaySettingsEditorCommand;
+    private ICommand? _displaySettingsEditorCommand = null!;
     public ICommand DisplaySettingsEditorCommand => _displaySettingsEditorCommand ??= new AsyncRelayCommand(DisplaySettingsEditorAsync);
 
     private async Task DisplaySettingsEditorAsync()
