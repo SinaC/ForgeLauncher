@@ -1,4 +1,5 @@
 ﻿using ForgeLauncher.WPF.Attributes;
+using ForgeLauncher.WPF.Extensions;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -58,12 +59,7 @@ namespace ForgeLauncher.WPF.Services
                 var dotLastIndex = localVersion.LastIndexOf(".");
                 localVersion = localVersion.Substring(0, dotLastIndex);
             }
-            return localVersion.CompareTo(serverVersion) < 0;
-        }
-
-        public async  Task SaveLatestVersionAsync(string version, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
+            return VersionComparer.Compare(localVersion, serverVersion) < 0;
         }
     }
 }

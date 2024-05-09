@@ -129,7 +129,7 @@ public class MainVM : ObservableObject
                 Log("Updating Forge Launcher to lastest version...");
                 // TODO
                 await DownloadLauncherAsync(serverVersion, serverVersionFilename, cancellationToken)
-                    .ContinueWith(t => UnpackLauncher(t.Result), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                    .ContinueWith(t => InstallLauncher(t.Result), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Log("Forge Launcher Update complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => RestartLauncher(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
                 return true;
@@ -290,28 +290,23 @@ public class MainVM : ObservableObject
         protected set => SetProperty(ref _isUnpacking, value, nameof(IsUnpacking), nameof(IsInProgress));
     }
 
-    private void UnpackLauncher(string archiveFilePath)
+    private void InstallLauncher(string archiveFilePath)
     {
         if (archiveFilePath == null)
         {
-            Log("Failed to unpack Forge Launcher");
+            Log("Failed to install Forge Launcher");
             return;
         }
 
         try
         {
-            Log("Unpacking Forge Launcher update...");
+            Log("Installing Forge Launcher update...");
 
             IsUnpacking = true;
-            //var forgeLauncherPath = AppDomain.CurrentDomain.BaseDirectory;
             var destinationFilePath = Path.GetTempPath();
             Logger.Information($"Extracting {archiveFilePath} to {destinationFilePath}");
             UnpackService.ExtractTarBz2(archiveFilePath, destinationFilePath);
             
-            var moveDestinationFilePath = Path.Combine(destinationFilePath, "Forge.Launcher.WPF.exe.bak");
-            Logger.Information($"Moving Forge.Launcher.WPF.exe to {moveDestinationFilePath}");
-            File.Move("Forge.Launcher.WPF.exe", moveDestinationFilePath, true);
-
             Logger.Information($"Rename Forge.Launcher.WPF.exe to Forge.Launcher.WPF.exe.temp");
             File.Move("Forge.Launcher.WPF.exe", "Forge.Launcher.WPF.exe.temp", true);
 
@@ -322,12 +317,12 @@ public class MainVM : ObservableObject
             Logger.Information($"Delete {archiveFilePath}");
             File.Delete(archiveFilePath);
 
-            Log("Forge Launcher update unpacked.");
+            Log("Forge Launcher update installed.");
         }
         catch (Exception ex)
         {
             LogException(ex);
-            LogError("Forge Launcher unpack failed!");
+            LogError("Forge Launcher install failed!");
         }
         finally
         {
