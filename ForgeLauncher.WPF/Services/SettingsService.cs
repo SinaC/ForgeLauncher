@@ -1,6 +1,5 @@
 ﻿using ForgeLauncher.WPF.Attributes;
 using Serilog;
-using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -88,7 +87,7 @@ public class SettingsService : ISettingsService
                 return dictionary!;
             }
         }
-        catch (Exception ex)
+        catch
         {
         }
         return new Dictionary<string, string>
