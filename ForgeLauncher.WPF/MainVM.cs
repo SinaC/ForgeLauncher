@@ -127,7 +127,6 @@ public class MainVM : ObservableObject
             if (messageBoxResult == MessageBoxResult.Yes)
             {
                 Log("Updating Forge Launcher to lastest version...");
-                // TODO
                 await DownloadLauncherAsync(serverVersion, serverVersionFilename, cancellationToken)
                     .ContinueWith(t => InstallLauncher(t.Result), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
                     .ContinueWith(_ => Log("Forge Launcher Update complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
@@ -204,9 +203,13 @@ public class MainVM : ObservableObject
             MessageBox.Show("Cannot update. Server issue!");
             return;
         }
-        await DownloadForgeAsync(cancellationToken)
-            .ContinueWith(t => UnpackForge(t.Result), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
-            .ContinueWith(_ => ForgeVersioningService.SaveLatestVersionAsync(ForgeServerVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+        var messageBoxResult = MessageBox.Show("Are you sure you want to download latest Forge version ?", "Forge Launcher", MessageBoxButton.YesNo);
+        if (messageBoxResult == MessageBoxResult.Yes)
+        {
+            await DownloadForgeAsync(cancellationToken)
+                .ContinueWith(t => UnpackForge(t.Result), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                .ContinueWith(_ => ForgeVersioningService.SaveLatestVersionAsync(ForgeServerVersion, cancellationToken), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+        }
     }
 
     private bool _isDownloading;
@@ -371,9 +374,35 @@ public class MainVM : ObservableObject
     public void RestartLauncher()
     {
         Process.Start("Forge.Launcher.WPF.exe");
-        //Application.Current.Shutdown();
-        //Application.Current.MainWindow.Close();
         Environment.Exit(0);
+    }
+
+    // Check for updates
+    private ICommand _checkForUpdatesCommand;
+    public ICommand CheckForUpdatesCommand => _checkForUpdatesCommand ??= new AsyncRelayCommand(CheckForUpdatesAsync);
+
+    private async Task CheckForUpdatesAsync(CancellationToken cancellationToken)
+    {
+        var localVersion = await LauncherVersioningService.GetLocalVersionAsync(cancellationToken);
+        if (localVersion == null)
+            return;
+        var serverVersion = await LauncherVersioningService.GetServerVersionAsync(cancellationToken);
+        if (serverVersion == default)
+            return;
+        if (LauncherVersioningService.IsVersionOutdated(localVersion, serverVersion.serverVersion))
+        {
+            var messageBoxResult = MessageBox.Show("Forge Launcher is outdated, do you want to update and restart ?", "Forge Launcher", MessageBoxButton.YesNo);
+            if (messageBoxResult == MessageBoxResult.Yes)
+            {
+                Log("Updating Forge Launcher to lastest version...");
+                await DownloadLauncherAsync(serverVersion.serverVersion, serverVersion.serverVersionFilename, cancellationToken)
+                    .ContinueWith(t => InstallLauncher(t.Result), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                    .ContinueWith(_ => Log("Forge Launcher Update complete."), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default)
+                    .ContinueWith(_ => RestartLauncher(), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+            }
+        }
+        else
+            MessageBox.Show("Forge Launcher is up-to-date");
     }
 
     // Launch
