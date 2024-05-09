@@ -1,4 +1,5 @@
 ﻿using ForgeLauncher.WPF.Attributes;
+using ForgeLauncher.WPF.Extensions;
 using System;
 using System.IO;
 using System.Linq;
@@ -77,7 +78,7 @@ public class ForgeVersioningService : IForgeVersioningService
     public bool IsVersionOutdated(string localVersion, string serverVersion)
     {
         if (localVersion.Contains("SNAPSHOT"))
-            return localVersion.CompareTo(serverVersion) < 0;
+            return VersionComparer.Compare(localVersion, serverVersion) < 0;
         return !serverVersion.Contains(localVersion);
     }
 
