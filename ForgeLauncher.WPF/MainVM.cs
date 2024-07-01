@@ -62,14 +62,14 @@ public class MainVM : ObservableObject
         try
         {
             File.Delete("Forge.Launcher.WPF.exe.bak");
-            Log("Checking local Launcher version...");
+            Log("Retrieving local Launcher version...");
             var localVersion = await LauncherVersioningService.GetLocalVersionAsync(cancellationToken);
             if (localVersion == null)
                 Log("Launcher is not installed!");
             else
                 Log($"Local Launcher version is {localVersion}");
 
-            Log("Checking server Launcher version...");
+            Log("Retrieving server Launcher version...");
             var serverVersion = await LauncherVersioningService.GetServerVersionAsync(cancellationToken);
             if (serverVersion == default)
                 LogError($"Cannot retrieve server Launcher version!");
@@ -81,7 +81,7 @@ public class MainVM : ObservableObject
         catch (Exception ex)
         {
             LogException(ex);
-            LogError("Error while checking version!");
+            LogError("Error while retrieving version!");
         }
         return false;
     }
@@ -90,14 +90,14 @@ public class MainVM : ObservableObject
     {
         try
         {
-            Log("Checking local Forge version...");
+            Log("Retrieving local Forge version...");
             var localVersion = await ForgeVersioningService.GetLocalVersionAsync(cancellationToken);
             if (localVersion == null)
                 Log("Forge is not installed!");
             else
                 Log($"Local Forge version is {localVersion}");
 
-            Log("Checking server Forge version...");
+            Log("Retrieving server Forge version...");
             var serverVersion = await ForgeVersioningService.GetServerVersionAsync(cancellationToken);
             if (serverVersion == default)
                 LogError($"Cannot retrieve server Forge version!");
@@ -112,7 +112,7 @@ public class MainVM : ObservableObject
         catch (Exception ex)
         {
             LogException(ex);
-            LogError("Error while checking version!");
+            LogError("Error while retrieving version!");
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using ForgeLauncher.WPF.Attributes;
 using ForgeLauncher.WPF.Extensions;
 using System;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -71,9 +72,9 @@ public class ForgeVersioningService : IForgeVersioningService
 
     public bool IsVersionOutdated(string localVersion, string serverVersion)
     {
-        if (localVersion.Contains("SNAPSHOT"))
-            return VersionComparer.Compare(localVersion, serverVersion) < 0;
-        return !serverVersion.Contains(localVersion);
+        localVersion = TrimSnapshot(localVersion);
+        serverVersion = TrimSnapshot(serverVersion);
+        return VersionComparer.Compare(localVersion, serverVersion) < 0;
     }
 
     public async Task SaveLatestVersionAsync(string version, CancellationToken cancellationToken)
@@ -83,4 +84,12 @@ public class ForgeVersioningService : IForgeVersioningService
 
     private static string ExtractVersionFromJar(string filename)
         => Path.GetFileNameWithoutExtension(filename).Replace("forge-gui-desktop-", string.Empty).Replace("-SNAPSHOT-jar-with-dependencies", string.Empty);
+
+    private static string TrimSnapshot(string version)
+    {
+        var indexOfSnapshot = version.IndexOf("-SNAPSHOT");
+        if (indexOfSnapshot <= 0)
+            return version;
+        return version.Substring(0, indexOfSnapshot);
+    }
 }
