@@ -14,14 +14,14 @@ public static class VersionComparer
         {
             // storing numeric part of
             // version 1 in vnum1
-            while (i < v1.Length && v1[i] != '.')
+            while (i < v1.Length && v1[i] != '.' && v1[i] != '-')
             {
                 vnum1 = vnum1 * 10 + (v1[i] - '0');
                 i++;
             }
             // storing numeric part of
             // version 2 in vnum2
-            while (j < v2.Length && v2[j] != '.')
+            while (j < v2.Length && v2[j] != '.' && v2[j] != '-')
             {
                 vnum2 = vnum2 * 10 + (v2[j] - '0');
                 j++;

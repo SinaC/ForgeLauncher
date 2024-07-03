@@ -72,9 +72,16 @@ public class ForgeVersioningService : IForgeVersioningService
 
     public bool IsVersionOutdated(string localVersion, string serverVersion)
     {
-        localVersion = TrimSnapshot(localVersion);
-        serverVersion = TrimSnapshot(serverVersion);
-        return VersionComparer.Compare(localVersion, serverVersion) < 0;
+        var (localMajor, localMinor) = ExtractVersions(localVersion);
+        var (serverMajor, serverMinor) = ExtractVersions(serverVersion);
+        var majorMinor = VersionComparer.Compare(localMajor, serverMajor);
+        if (majorMinor < 0)
+            return true;
+        if (majorMinor > 0)
+            return false;
+        if (!string.IsNullOrWhiteSpace(localMinor) && !string.IsNullOrWhiteSpace(serverMinor))
+            return VersionComparer.Compare(localMinor, serverMinor) < 0;
+        return !serverVersion.Contains(localVersion);
     }
 
     public async Task SaveLatestVersionAsync(string version, CancellationToken cancellationToken)
@@ -85,11 +92,11 @@ public class ForgeVersioningService : IForgeVersioningService
     private static string ExtractVersionFromJar(string filename)
         => Path.GetFileNameWithoutExtension(filename).Replace("forge-gui-desktop-", string.Empty).Replace("-SNAPSHOT-jar-with-dependencies", string.Empty);
 
-    private static string TrimSnapshot(string version)
+    private static (string major, string minor) ExtractVersions(string rawVersion)
     {
-        var indexOfSnapshot = version.IndexOf("-SNAPSHOT");
-        if (indexOfSnapshot <= 0)
-            return version;
-        return version.Substring(0, indexOfSnapshot);
+        var split = rawVersion.Split("-SNAPSHOT-");
+        if (split.Length > 1)
+            return (split[0], split[1]);
+        return (split[0], string.Empty);
     }
 }
