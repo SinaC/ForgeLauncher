@@ -48,8 +48,10 @@ public class ForgeVersioningService : IForgeVersioningService
 
         var html = await DownloadService.DownloadHtmlAsync(dailySnapshotsUrl, cancellationToken);
 
-        // search for <a href="forge-gui-desktop
-        var guiDesktopAhrefLine = html.Split(Environment.NewLine.ToCharArray()).FirstOrDefault(x => x.TrimStart().StartsWith("<a href=\"forge-gui-desktop"));
+        //// search for <a href="forge-gui-desktop
+        //var guiDesktopAhrefLine = html.Split(Environment.NewLine.ToCharArray()).FirstOrDefault(x => x.TrimStart().StartsWith("<a href=\"forge-gui-desktop"));
+        // search for <a href="forge-installer
+        var guiDesktopAhrefLine = html.Split(Environment.NewLine.ToCharArray()).FirstOrDefault(x => x.TrimStart().StartsWith("<a href=\"forge-installer") && x.TrimEnd().Contains(".tar.bz2"));
         if (guiDesktopAhrefLine != null)
         {
             var firstDoubleQuoteIndex = guiDesktopAhrefLine.IndexOf("\"");
@@ -61,7 +63,7 @@ public class ForgeVersioningService : IForgeVersioningService
                     var serverVersionFilename = guiDesktopAhrefLine.Substring(firstDoubleQuoteIndex + 1, secondDoubleQuoteIndex - firstDoubleQuoteIndex - 1);
                     if (serverVersionFilename.EndsWith(".tar.bz2"))
                     {
-                        var serverVersion = serverVersionFilename.Replace("forge-gui-desktop-", string.Empty).Replace(".tar.bz2", string.Empty);
+                        var serverVersion = serverVersionFilename.Replace("<a href=\"forge-installer", string.Empty).Replace(".tar.bz2", string.Empty);
                         return (serverVersion, serverVersionFilename);
                     }
                 }
@@ -90,11 +92,11 @@ public class ForgeVersioningService : IForgeVersioningService
     }
 
     private static string ExtractVersionFromJar(string filename)
-        => Path.GetFileNameWithoutExtension(filename).Replace("forge-gui-desktop-", string.Empty).Replace("-SNAPSHOT-jar-with-dependencies", string.Empty);
+        => Path.GetFileNameWithoutExtension(filename).Replace("forge-gui-desktop-", string.Empty).Replace("-SNAPSHOT-jar-with-dependencies", string.Empty).Replace("forge-installer-", string.Empty);
 
     private static (string major, string minor) ExtractVersions(string rawVersion)
     {
-        var split = rawVersion.Split("-SNAPSHOT-");
+        var split = rawVersion.Replace("forge-installer-", string.Empty).Split("-SNAPSHOT-");
         if (split.Length > 1)
             return (split[0], split[1]);
         return (split[0], string.Empty);
