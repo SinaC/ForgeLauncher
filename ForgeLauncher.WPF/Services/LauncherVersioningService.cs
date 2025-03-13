@@ -28,7 +28,7 @@ public class LauncherVersioningService : ILauncherVersioningService
 
     public async Task<(string serverVersion, string serverVersionFilename)> GetServerVersionAsync(CancellationToken cancellationToken)
     {
-        var releaseUrl = SettingsService.ReleaseUrl;
+        var releaseUrl = SettingsService.LauncherReleaseUrl;
 
         var html = await DownloadService.DownloadHtmlAsync(releaseUrl, cancellationToken);
 

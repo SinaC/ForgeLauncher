@@ -44,21 +44,22 @@ public class ForgeVersioningService : IForgeVersioningService
 
     public async Task<(string serverVersion, string serverVersionFilename)> GetServerVersionAsync(CancellationToken cancellationToken)
     {
-        var dailySnapshotsUrl = SettingsService.DailySnapshotsUrl;
+        var dailySnapshotVersionUrl = SettingsService.ForgeDailySnapshotUrl + "expanded_assets/daily-snapshots/";
 
-        var html = await DownloadService.DownloadHtmlAsync(dailySnapshotsUrl, cancellationToken);
+        var html = await DownloadService.DownloadHtmlAsync(dailySnapshotVersionUrl, cancellationToken);
 
         // search for <a href="forge-installer
-        var guiDesktopAhrefLine = html.Split(Environment.NewLine.ToCharArray()).FirstOrDefault(x => x.TrimStart().StartsWith("<a href=\"forge-installer") && x.TrimEnd().Contains(".tar.bz2"));
+        var guiDesktopAhrefLine = html.Split(Environment.NewLine.ToCharArray()).FirstOrDefault(x => x.TrimStart().StartsWith("<a href=\"/Card-Forge/forge/releases/download/daily-snapshots/forge-installer-") && x.TrimEnd().Contains(".tar.bz2"));
         if (guiDesktopAhrefLine != null)
         {
-            var firstDoubleQuoteIndex = guiDesktopAhrefLine.IndexOf("\"");
-            if (firstDoubleQuoteIndex != -1)
+            var dailySnapshotsTag = "daily-snapshots/";
+            var dailySnapshotsIndex = guiDesktopAhrefLine.IndexOf(dailySnapshotsTag);
+            if (dailySnapshotsIndex != -1)
             {
-                var secondDoubleQuoteIndex = guiDesktopAhrefLine.IndexOf("\"", firstDoubleQuoteIndex + 1);
+                var secondDoubleQuoteIndex = guiDesktopAhrefLine.IndexOf("\"", dailySnapshotsIndex + dailySnapshotsTag.Length);
                 if (secondDoubleQuoteIndex != -1)
                 {
-                    var serverVersionFilename = guiDesktopAhrefLine.Substring(firstDoubleQuoteIndex + 1, secondDoubleQuoteIndex - firstDoubleQuoteIndex - 1);
+                    var serverVersionFilename = guiDesktopAhrefLine[(dailySnapshotsIndex + dailySnapshotsTag.Length)..secondDoubleQuoteIndex];
                     if (serverVersionFilename.EndsWith(".tar.bz2"))
                     {
                         var serverVersion = serverVersionFilename.Replace("forge-installer-", string.Empty).Replace(".tar.bz2", string.Empty);

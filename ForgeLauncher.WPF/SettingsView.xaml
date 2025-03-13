@@ -58,29 +58,29 @@
                      FontSize="18"
                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                      Text="{Binding ForgeExecutable}" />
-            <!-- Snapshot download url -->
+            <!-- Forge snapshot download url -->
             <Button Grid.Row="2"
                     Grid.Column="0"
                     Margin="5,2"
                     VerticalAlignment="Bottom"
                     Style="{StaticResource MaterialDesignIconForegroundButton}"
-                    Command="{Binding GoToDailySnapshotUrlCommand}">
+                    Command="{Binding GoToForgeDailySnapshotUrlCommand}">
                 <materialDesign:PackIcon Kind="LinkVariant" />
             </Button>
             <TextBox Grid.Row="2"
                      Grid.Column="1"
                      Margin="5,8"
-                     materialDesign:HintAssist.Hint="Daily snapshot URL"
+                     materialDesign:HintAssist.Hint="Forge daily snapshot URL"
                      FontSize="16"
                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                     Text="{Binding DailySnapshotsUrl}" />
-            <!-- Release url -->
+                     Text="{Binding ForgeDailySnapshotUrl}" />
+            <!-- Launcher release url -->
             <Button Grid.Row="3"
                     Grid.Column="0"
                     Margin="5,2"
                     VerticalAlignment="Bottom"
                     Style="{StaticResource MaterialDesignIconForegroundButton}"
-                    Command="{Binding GoToReleaseUrlCommand}">
+                    Command="{Binding GoToLauncherReleaseUrlCommand}">
                 <materialDesign:PackIcon Kind="LinkVariant" />
             </Button>
             <TextBox Grid.Row="3"
@@ -89,7 +89,7 @@
                      materialDesign:HintAssist.Hint="Release URL"
                      FontSize="16"
                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                     Text="{Binding ReleaseUrl}" />
+                     Text="{Binding LauncherReleaseUrl}" />
             <!-- Automatically close when starting forge -->
             <ToggleButton Grid.Row="4"
                           Grid.Column="0"

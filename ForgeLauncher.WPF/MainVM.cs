@@ -250,8 +250,8 @@ public class MainVM : ObservableObject
 
             IsDownloading = true;
 
-            var dailySnapshotsUrl = SettingsService.DailySnapshotsUrl;
-            var downloadUrl = dailySnapshotsUrl + ForgeServerVersionFilename;
+            var dailySnapshotDownloadUrl = SettingsService.ForgeDailySnapshotUrl + "download/daily-snapshots/";
+            var downloadUrl = dailySnapshotDownloadUrl + ForgeServerVersionFilename;
             var destinationFilePath = Path.Combine(Path.GetTempPath(), ForgeServerVersionFilename);
             Logger.Information($"Downloading {downloadUrl} to {destinationFilePath}");
             await DownloadService.DownloadFileAsync(downloadUrl, destinationFilePath, HandleDownloadProgressChanged, cancellationToken);
@@ -475,8 +475,8 @@ public class MainVM : ObservableObject
         if (result is bool accept && accept)
         {
             SettingsService.ForgeInstallationFolder = settingsVM.ForgeInstallationFolder;
-            SettingsService.DailySnapshotsUrl = settingsVM.DailySnapshotsUrl;
-            SettingsService.ReleaseUrl = settingsVM.ReleaseUrl;
+            SettingsService.ForgeDailySnapshotUrl = settingsVM.ForgeDailySnapshotUrl;
+            SettingsService.LauncherReleaseUrl = settingsVM.LauncherReleaseUrl;
             SettingsService.CloseWhenStartingForge = settingsVM.CloseWhenStartingForge;
             SettingsService.ForgeExecutable = settingsVM.ForgeExecutable;
             await SettingsService.SaveAsync(CancellationToken.None);
