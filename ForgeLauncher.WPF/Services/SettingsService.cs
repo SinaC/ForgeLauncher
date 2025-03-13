@@ -13,15 +13,15 @@ namespace ForgeLauncher.WPF.Services;
 public class SettingsService : ISettingsService
 {
     private const string SettingFileName = "Forge.Launcher.WPF.config";
-    private const string DefaultDailySnapshotUrl = "https://downloads.cardforge.org/dailysnapshots/";
+    private const string DefaultForgeDailySnapshotUrl = "https://github.com/Card-Forge/forge/releases/";
     private const string DefaultForgeExecutable = "forge.exe";
-    private const string DefaultReleaseUrl = "https://github.com/SinaC/ForgeLauncher/releases/";
+    private const string DefaultLauncherReleaseUrlReleaseUrl = "https://github.com/SinaC/ForgeLauncher/releases/";
 
     private const string ForgeInstallationFolderKey = "ForgeInstallationFolder";
-    private const string DailySnapshotsUrlKey = "DailySnapshotsUrl";
+    private const string ForgeDailySnapshotUrlKey = "ForgeDailySnapshotUrl";
     private const string CloseWhenStartingForgeKey = "CloseWhenStartingForge";
     private const string ForgeExecutableKey = "ForgeExecutable";
-    private const string ReleaseUrlKey = "ReleaseUrl";
+    private const string LauncherReleaseUrlKey = "LauncherReleaseUrl";
 
     private readonly Lazy<IDictionary<string, string>> _settings = new(() => InitializeSettings());
 
@@ -45,10 +45,10 @@ public class SettingsService : ISettingsService
         set => Set(ForgeExecutableKey, value);
     }
 
-    public string DailySnapshotsUrl
+    public string ForgeDailySnapshotUrl
     {
-        get => Get(DailySnapshotsUrlKey, DefaultDailySnapshotUrl);
-        set => Set(DailySnapshotsUrlKey, value);
+        get => Get(ForgeDailySnapshotUrlKey, DefaultForgeDailySnapshotUrl);
+        set => Set(ForgeDailySnapshotUrlKey, value);
     }
 
     public bool CloseWhenStartingForge
@@ -57,10 +57,10 @@ public class SettingsService : ISettingsService
         set => Set(CloseWhenStartingForgeKey, value);
     }
 
-    public string ReleaseUrl
+    public string LauncherReleaseUrl
     {
-        get => Get(ReleaseUrlKey, DefaultReleaseUrl);
-        set => Set(ReleaseUrlKey, value);
+        get => Get(LauncherReleaseUrlKey, DefaultLauncherReleaseUrlReleaseUrl);
+        set => Set(LauncherReleaseUrlKey, value);
     }
 
     public async Task SaveAsync(CancellationToken cancellationToken)
@@ -93,10 +93,10 @@ public class SettingsService : ISettingsService
         return new Dictionary<string, string>
         {
             { ForgeInstallationFolderKey, AppDomain.CurrentDomain.BaseDirectory },
-            { DailySnapshotsUrlKey, DefaultDailySnapshotUrl },
+            { ForgeDailySnapshotUrlKey, DefaultForgeDailySnapshotUrl },
             { CloseWhenStartingForgeKey, "true" },
             { ForgeExecutableKey, DefaultForgeExecutable },
-            { ReleaseUrlKey, DefaultReleaseUrl }
+            { LauncherReleaseUrlKey, DefaultLauncherReleaseUrlReleaseUrl }
         };
     }
 

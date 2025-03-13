@@ -17,8 +17,8 @@ public class SettingsVM : ObservableObject
     {
         ForgeInstallationFolder = settingsService.ForgeInstallationFolder;
         ForgeExecutable = settingsService.ForgeExecutable;
-        DailySnapshotsUrl = settingsService.DailySnapshotsUrl;
-        ReleaseUrl = settingsService.ReleaseUrl;
+        ForgeDailySnapshotUrl = settingsService.ForgeDailySnapshotUrl;
+        LauncherReleaseUrl = settingsService.LauncherReleaseUrl;
         CloseWhenStartingForge = settingsService.CloseWhenStartingForge;
     }
 
@@ -76,23 +76,23 @@ public class SettingsVM : ObservableObject
     }
 
     //
-    private ICommand _goToDailySnapshotUrlCommand = null!;
-    public ICommand GoToDailySnapshotUrlCommand => _goToDailySnapshotUrlCommand ??= new RelayCommand(GoToDailySnapshotUrl);
+    private ICommand _goToForgeDailySnapshotUrlCommand = null!;
+    public ICommand GoToForgeDailySnapshotUrlCommand => _goToForgeDailySnapshotUrlCommand ??= new RelayCommand(GoToForgeDailySnapshotUrl);
 
-    private void GoToDailySnapshotUrl()
+    private void GoToForgeDailySnapshotUrl()
     {
         Process.Start(new ProcessStartInfo
         {
-            FileName = DailySnapshotsUrl,
+            FileName = ForgeDailySnapshotUrl,
             UseShellExecute = true
         });
     }
 
-    private string _dailySnapshotsUrl = null!;
-    public string DailySnapshotsUrl
+    private string _forgeDailySnapshotUrl = null!;
+    public string ForgeDailySnapshotUrl
     {
-        get => _dailySnapshotsUrl;
-        set => SetProperty(ref _dailySnapshotsUrl, value);
+        get => _forgeDailySnapshotUrl;
+        set => SetProperty(ref _forgeDailySnapshotUrl, value);
     }
 
     //
@@ -103,16 +103,16 @@ public class SettingsVM : ObservableObject
     {
         Process.Start(new ProcessStartInfo
         {
-            FileName = ReleaseUrl,
+            FileName = LauncherReleaseUrl,
             UseShellExecute = true
         });
     }
 
-    private string _releaseUrl = null!;
-    public string ReleaseUrl
+    private string _launcherReleaseUrl = null!;
+    public string LauncherReleaseUrl
     {
-        get => _releaseUrl;
-        set => SetProperty(ref _releaseUrl, value);
+        get => _launcherReleaseUrl;
+        set => SetProperty(ref _launcherReleaseUrl, value);
     }
 
     //
@@ -130,8 +130,8 @@ internal class SettingsVMDesignData : SettingsVM
     {
         ForgeInstallationFolder = @"F:\Forge\";
         ForgeExecutable = "forge.exe";
-        DailySnapshotsUrl = @"https://downloads.cardforge.org/dailysnapshots/";
-        ReleaseUrl = @"https://github.com/SinaC/ForgeLauncher/releases/";
+        ForgeDailySnapshotUrl = @"https://github.com/Card-Forge/forge/releases/";
+        LauncherReleaseUrl = @"https://github.com/SinaC/ForgeLauncher/releases/";
         CloseWhenStartingForge = true;
     }
 }

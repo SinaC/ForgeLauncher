@@ -7,9 +7,9 @@ public interface ISettingsService
 {
     string ForgeInstallationFolder { get; set; }
     string ForgeExecutable { get; set; }
-    string DailySnapshotsUrl { get; set; }
+    string ForgeDailySnapshotUrl { get; set; }
     bool CloseWhenStartingForge { get; set; }
-    string ReleaseUrl { get; set; }
+    string LauncherReleaseUrl { get; set; }
 
     Task SaveAsync(CancellationToken cancellationToken);
 }
